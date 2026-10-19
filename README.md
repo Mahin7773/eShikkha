@@ -2,42 +2,50 @@
 
 A course marketplace and learning platform built with Django for System Development Project, inspired by Udemy. Instructors publish and sell courses, students buy and complete them, and administrators moderate the platform.
 
+## Workflow
+
+```mermaid
+flowchart TD
+    subgraph INS[Instructor]
+        A[Create course] --> B[Add sections, lessons,<br/>materials and quizzes]
+        B --> C[Submit for review]
+    end
+
+    subgraph ADM[Administrator]
+        D{Review course}
+    end
+
+    subgraph STU[Student]
+        F[Browse and search courses] --> G{Free course?}
+        G -- Yes --> J[Enrolled]
+        G -- No --> H[Cart and checkout]
+        H --> I{Simulated payment}
+        I -- Approved --> J
+        I -- Declined --> H
+        I -- Cancelled --> F
+        J --> K[Watch lessons and<br/>mark them complete]
+        K --> L[Take quizzes]
+        L --> M{All required lessons<br/>and quizzes done?}
+        M -- No --> K
+        M -- Yes --> N[Certificate issued]
+        N --> O[Public verification page]
+    end
+
+    C --> D
+    D -- Changes requested / rejected --> B
+    D -- Approved --> E[Published in catalogue]
+    E --> F
+```
+
 ## Screenshots
 
 ![eShikkha home page](docs/screenshots/01-home.png)
 
-### Student workflow: discover → buy → learn → certify
-
 <table>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/02-catalog.png" alt="Catalogue with search, topic chips and filters"><br><sub><b>1.</b> Catalogue with search, topic chips and filters</sub></td><td width="50%" valign="top"><img src="docs/screenshots/03-course-detail.png" alt="Course page: objectives, curriculum, instructor and reviews"><br><sub><b>2.</b> Course page: objectives, curriculum, instructor and reviews</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/04-cart.png" alt="Cart, with prices confirmed on the server"><br><sub><b>3.</b> Cart, with prices confirmed on the server</sub></td><td width="50%" valign="top"><img src="docs/screenshots/05-checkout.png" alt="Order review before payment"><br><sub><b>4.</b> Order review before payment</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/06-payment-gateway.png" alt="Simulated payment gateway: approve, decline or cancel"><br><sub><b>5.</b> Simulated payment gateway: approve, decline or cancel</sub></td><td width="50%" valign="top"><img src="docs/screenshots/07-payment-success.png" alt="Payment approved; courses unlocked"><br><sub><b>6.</b> Payment approved; courses unlocked</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/09-learning-dashboard.png" alt="Learning dashboard with resume card and progress"><br><sub><b>7.</b> Learning dashboard with resume card and progress</sub></td><td width="50%" valign="top"><img src="docs/screenshots/10-course-player.png" alt="Course player: lesson list, video, materials and progress"><br><sub><b>8.</b> Course player: lesson list, video, materials and progress</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/11-quiz-intro.png" alt="Quiz rules: pass mark, time limit and attempts"><br><sub><b>9.</b> Quiz rules: pass mark, time limit and attempts</sub></td><td width="50%" valign="top"><img src="docs/screenshots/12-quiz-attempt.png" alt="Timed quiz attempt"><br><sub><b>10.</b> Timed quiz attempt</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/13-quiz-result.png" alt="Graded result with correct answers and explanations"><br><sub><b>11.</b> Graded result with correct answers and explanations</sub></td><td width="50%" valign="top"><img src="docs/screenshots/14-certificates.png" alt="Certificates ready to download as PDF"><br><sub><b>12.</b> Certificates ready to download as PDF</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/15-certificate-verification.png" alt="Public certificate verification page"><br><sub><b>13.</b> Public certificate verification page</sub></td><td width="50%" valign="top"><img src="docs/screenshots/08-purchase-history.png" alt="Purchase history"><br><sub><b>14.</b> Purchase history</sub></td></tr>
-</table>
-
-<p align="center"><img src="docs/screenshots/10b-course-player-mobile.png" alt="Course player on mobile" width="300"><br><sub>The course player on a phone</sub></p>
-
-### Instructor workflow: design → submit → teach → track
-
-<table>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/20-studio-dashboard.png" alt="Studio dashboard: courses, students and earnings"><br><sub><b>1.</b> Studio dashboard: courses, students and earnings</sub></td><td width="50%" valign="top"><img src="docs/screenshots/21-create-course.png" alt="Create a course: details, pricing and completion rules"><br><sub><b>2.</b> Create a course: details, pricing and completion rules</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/22-curriculum-builder.png" alt="Curriculum builder: sections, lessons and ordering"><br><sub><b>3.</b> Curriculum builder: sections, lessons and ordering</sub></td><td width="50%" valign="top"><img src="docs/screenshots/23-lesson-editor.png" alt="Lesson editor with video and lecture materials"><br><sub><b>4.</b> Lesson editor with video and lecture materials</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/24-quiz-builder.png" alt="Quiz builder"><br><sub><b>5.</b> Quiz builder</sub></td><td width="50%" valign="top"><img src="docs/screenshots/25-question-editor.png" alt="Question editor: multiple choice and true/false"><br><sub><b>6.</b> Question editor: multiple choice and true/false</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/26-moderation-feedback.png" alt="Course status, readiness checklist and admin feedback"><br><sub><b>7.</b> Course status, readiness checklist and admin feedback</sub></td><td width="50%" valign="top"><img src="docs/screenshots/27-student-progress.png" alt="Enrolled students' progress and quiz scores"><br><sub><b>8.</b> Enrolled students' progress and quiz scores</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/28-quiz-analytics.png" alt="Quiz analytics: pass rate and per-question accuracy"><br><sub><b>9.</b> Quiz analytics: pass rate and per-question accuracy</sub></td><td width="50%" valign="top"><img src="docs/screenshots/29-earnings.png" alt="Estimated earnings breakdown"><br><sub><b>10.</b> Estimated earnings breakdown</sub></td></tr>
-</table>
-
-### Administrator workflow: review → moderate → manage → audit
-
-<table>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/30-admin-dashboard.png" alt="Admin dashboard with review, application and report queues"><br><sub><b>1.</b> Admin dashboard with review, application and report queues</sub></td><td width="50%" valign="top"><img src="docs/screenshots/31-review-queue.png" alt="Courses waiting for review"><br><sub><b>2.</b> Courses waiting for review</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/32-course-moderation.png" alt="Moderation view: content, quizzes, instructor and decision"><br><sub><b>3.</b> Moderation view: content, quizzes, instructor and decision</sub></td><td width="50%" valign="top"><img src="docs/screenshots/37-reports.png" alt="Reported content"><br><sub><b>4.</b> Reported content</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/33-user-management.png" alt="User management: search, filter, suspend"><br><sub><b>5.</b> User management: search, filter, suspend</sub></td><td width="50%" valign="top"><img src="docs/screenshots/34-user-detail.png" alt="User detail: role, suspension and granting access"><br><sub><b>6.</b> User detail: role, suspension and granting access</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/35-transactions.png" alt="Payment transactions"><br><sub><b>7.</b> Payment transactions</sub></td><td width="50%" valign="top"><img src="docs/screenshots/36-platform-analytics.png" alt="Platform analytics"><br><sub><b>8.</b> Platform analytics</sub></td></tr>
-<tr><td width="50%" valign="top"><img src="docs/screenshots/38-settings.png" alt="Platform policies and certificate template"><br><sub><b>9.</b> Platform policies and certificate template</sub></td><td width="50%" valign="top"><img src="docs/screenshots/39-audit-log.png" alt="Audit log of admin actions"><br><sub><b>10.</b> Audit log of admin actions</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/screenshots/03-course-detail.png" alt="Course page"><br><sub>Course page</sub></td><td width="50%" valign="top"><img src="docs/screenshots/06-payment-gateway.png" alt="Simulated payment gateway"><br><sub>Simulated payment gateway</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/screenshots/10-course-player.png" alt="Course player"><br><sub>Course player</sub></td><td width="50%" valign="top"><img src="docs/screenshots/12-quiz-attempt.png" alt="Timed quiz"><br><sub>Timed quiz</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/screenshots/22-curriculum-builder.png" alt="Instructor: curriculum builder"><br><sub>Instructor: curriculum builder</sub></td><td width="50%" valign="top"><img src="docs/screenshots/24-quiz-builder.png" alt="Instructor: quiz builder"><br><sub>Instructor: quiz builder</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/screenshots/30-admin-dashboard.png" alt="Admin: dashboard"><br><sub>Admin: dashboard</sub></td><td width="50%" valign="top"><img src="docs/screenshots/32-course-moderation.png" alt="Admin: course moderation"><br><sub>Admin: course moderation</sub></td></tr>
 </table>
 
 ## Quick start
