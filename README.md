@@ -64,19 +64,17 @@ python manage.py test
 
 ```
 eShikkha/        project settings and root URLs
-core/            platform settings, audit log, reports, announcements, RBAC decorators,
-                 template tags (ui), protected file serving, seed_demo command
-accounts/        custom User (role, profile, suspension), instructor applications, auth views
-courses/         catalogue models, marketplace search (selectors.py), moderation + review rules (services.py)
-learning/        enrolments, progress, course player, certificates (PDF via ReportLab), verification
+core/            platform settings, audit log, reports, announcements
+accounts/        custom User role, profile, instructor applications
+courses/         catalogue models, marketplace search (selectors.py)
+learning/        enrolments, progress, course player, certificates, verification
 assessments/     quizzes, attempts, server-side grading and attempt rules
-commerce/        cart, orders, simulated payment gateway, instructor earnings, refunds
+commerce/        cart, orders, simulated payment gateway, instructor earnings
 notifications/   in-app notifications
-studio/          instructor workspace (views/forms only; uses the domain services)
-adminpanel/      moderation-focused admin console (views/forms only)
+studio/          instructor workspace
+adminpanel/      moderation-focused admin console
 templates/       Django templates (base layout, partials, one folder per app)
-static/          design-system CSS and a small progressive-enhancement JS file
-docs/            database design and ER diagram
+static/          design-system CSS and JS file
 ```
 
 ## Feature walkthrough
