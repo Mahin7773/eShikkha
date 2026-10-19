@@ -1,0 +1,49 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}Earnings – Studio{% endblock %}
+{% block studio %}
+<div class="page-header"><h1>Estimated earnings</h1><p>Your revenue share from course sales.</p></div>
+
+<div class="stat-grid mb-5">
+  <div class="stat"><div class="label">Gross sales</div><div class="value">{{ earnings.gross|usd }}</div><div class="hint">{{ earnings.sales }} sale{{ earnings.sales|pluralize }}</div></div>
+  <div class="stat"><div class="label">Platform fee</div><div class="value">−{{ earnings.fee|usd }}</div><div class="hint">current rate {{ fee_percent|floatformat:0 }}%</div></div>
+  <div class="stat"><div class="label">Your estimated share</div><div class="value" style="color:var(--success)">{{ earnings.net|usd }}</div></div>
+  <div class="stat"><div class="label">Reversed (refunds)</div><div class="value">{{ earnings.reversed|usd }}</div></div>
+</div>
+
+<div class="grid grid-2 mb-5">
+  <div class="card">
+    <div class="card-header"><h2>Monthly net (last 12 months)</h2></div>
+    <div class="card-body">
+      {% if earnings.monthly %}
+        <div class="bar-chart" role="img" aria-label="Monthly net earnings chart">
+          {% for m in earnings.monthly reversed %}<div class="bar" title="{{ m.month|date:'M Y' }}: {{ m.net|usd }}"><small>{{ m.net|floatformat:0 }}</small><span style="height:{{ m.bar }}%"></span><small>{{ m.month|date:"M" }}</small></div>{% endfor %}
+        </div>
+      {% else %}<p class="muted mb-0">No sales yet.</p>{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>By course</h2></div>
+    {% if earnings.by_course %}
+      <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+        <thead><tr><th>Course</th><th class="num">Sales</th><th class="num">Gross</th><th class="num">Net</th></tr></thead>
+        <tbody>{% for row in earnings.by_course %}<tr><td>{{ row.course__title }}</td><td class="num">{{ row.sales }}</td><td class="num">{{ row.gross|usd }}</td><td class="num strong">{{ row.net|usd }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    {% else %}<div class="card-body"><p class="muted mb-0">No sales yet.</p></div>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Recent sales</h2></div>
+  {% if recent %}
+    <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+      <thead><tr><th>Date</th><th>Order</th><th>Course</th><th class="num">Price paid</th><th class="num">Fee</th><th class="num">Your share</th><th>Status</th></tr></thead>
+      <tbody>{% for e in recent %}
+        <tr><td class="nowrap">{{ e.created_at|date:"M j, Y" }}</td><td class="mono">{{ e.order_item.order.order_number }}</td><td>{{ e.course.title }}</td>
+          <td class="num">{{ e.gross_amount|usd }}</td><td class="num">−{{ e.platform_fee|usd }} <span class="text-xs muted">({{ e.fee_percent|floatformat:0 }}%)</span></td><td class="num strong">{{ e.net_amount|usd }}</td>
+          <td>{% if e.status == 'reversed' %}{% badge "Reversed" "warning" %}{% else %}{% badge "Recorded" "success" %}{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  {% else %}<div class="card-body"><p class="muted mb-0">Sales of your paid courses will appear here.</p></div>{% endif %}
+</div>
+{% endblock %}

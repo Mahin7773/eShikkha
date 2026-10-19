@@ -1,0 +1,38 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}Students – {{ course.title }}{% endblock %}
+{% block studio %}
+<div class="page-header"><h1>Students</h1><p>Enrolled students, their progress and best quiz scores. You can only see students enrolled in your courses.</p></div>
+
+<form method="get" class="row mb-5">
+  <label class="sr-only" for="q">Search students</label>
+  <input id="q" class="input" type="search" name="q" value="{{ q }}" placeholder="Search by name or username" style="max-width:280px">
+  <label class="sr-only" for="status">Status</label>
+  <select id="status" name="status" class="input" style="width:auto">
+    <option value="">All students</option>
+    <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>In progress</option>
+    <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+  </select>
+  <button class="btn btn-outline" type="submit">Filter</button>
+</form>
+
+{% if rows %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Student</th><th>Enrolled</th><th>Status</th><th>Progress</th><th class="num">Lessons</th>{% for qz in quizzes %}<th class="num" title="{{ qz.title }}">{{ qz.title|truncatechars:16 }}</th>{% endfor %}<th>Last active</th></tr></thead>
+    <tbody>{% for row in rows %}{% with e=row.enrollment %}
+      <tr>
+        <td><div class="row" style="gap:8px;flex-wrap:nowrap"><span class="avatar">{{ e.student.initials }}</span><div><div class="strong">{{ e.student.display_name }}</div><div class="text-xs muted">@{{ e.student.username }}</div></div></div></td>
+        <td class="nowrap">{{ e.enrolled_at|date:"M j, Y" }}<div class="text-xs muted">{{ e.get_source_display }}</div></td>
+        <td>{% if e.status != 'active' %}{% badge e.get_status_display 'danger' %}{% elif e.is_completed %}{% badge "Completed" "success" %}{% else %}{% badge "In progress" "info" %}{% endif %}</td>
+        <td style="min-width:140px"><div class="progress progress-sm"><span style="width:{{ e.progress_percent }}%"></span></div><span class="text-xs muted">{{ e.progress_percent }}%</span></td>
+        <td class="num">{{ e.lessons_done }}/{{ total_lessons }}</td>
+        {% for score in row.scores %}<td class="num">{% if score %}{{ score.best|floatformat:0 }}%<div class="text-xs muted">{{ score.n }} try{{ score.n|pluralize:"ies" }}</div>{% else %}<span class="subtle">—</span>{% endif %}</td>{% endfor %}
+        <td class="nowrap text-sm">{% if e.last_accessed_at %}{{ e.last_accessed_at|timesince }} ago{% else %}<span class="subtle">Not started</span>{% endif %}</td>
+      </tr>
+    {% endwith %}{% endfor %}</tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+{% else %}
+  {% include "partials/empty.html" with icon_name="users" title="No students found" text="When students enrol in this course they will appear here." %}
+{% endif %}
+{% endblock %}

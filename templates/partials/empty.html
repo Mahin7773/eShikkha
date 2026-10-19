@@ -1,0 +1,6 @@
+{% load ui %}<div class="empty">
+  <div class="icon-circle">{% icon icon_name|default:"info" 24 %}</div>
+  <h3>{{ title }}</h3>
+  {% if text %}<p>{{ text }}</p>{% endif %}
+  {% if action_url %}<a class="btn btn-primary" href="{{ action_url }}">{{ action_label }}</a>{% endif %}
+</div>

@@ -1,0 +1,78 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}Curriculum – {{ course.title }}{% endblock %}
+{% block studio %}
+<div class="page-header row-between">
+  <div><h1>Curriculum</h1><p>Organise your course into sections and lessons. Attach lecture materials and quizzes to lessons.</p></div>
+  <a class="btn btn-outline" href="{% url 'learning:resume' course.slug %}">{% icon "eye" 16 %} Preview</a>
+</div>
+
+{% if not editable %}<div class="alert alert-info mb-5">{% icon "lock" 18 %}<div>This course is {{ course.get_status_display|lower }}; the curriculum is read-only.</div></div>{% endif %}
+
+{% for section in sections %}
+  <section class="builder-section" aria-labelledby="sec-{{ section.pk }}">
+    <header>
+      <span class="badge badge-neutral">Section {{ forloop.counter }}</span>
+      <h3 id="sec-{{ section.pk }}" class="grow">{{ section.title }}</h3>
+      {% if editable %}
+      <div class="icon-btns">
+        {% if not forloop.first %}<form method="post" action="{% url 'studio:section_move' course.pk section.pk 'up' %}">{% csrf_token %}<button class="btn btn-ghost" type="submit" aria-label="Move section up" title="Move up">{% icon "arrow-up" 16 %}</button></form>{% endif %}
+        {% if not forloop.last %}<form method="post" action="{% url 'studio:section_move' course.pk section.pk 'down' %}">{% csrf_token %}<button class="btn btn-ghost" type="submit" aria-label="Move section down" title="Move down">{% icon "arrow-down" 16 %}</button></form>{% endif %}
+        <a class="btn btn-ghost" href="{% url 'studio:section_edit' course.pk section.pk %}" aria-label="Rename section" title="Rename">{% icon "edit" 16 %}</a>
+        <form method="post" action="{% url 'studio:section_delete' course.pk section.pk %}" data-confirm="Delete “{{ section.title }}” and all of its lessons, materials and completion records?" data-confirm-title="Delete section?" data-confirm-button="Delete section">{% csrf_token %}<button class="btn btn-ghost" type="submit" aria-label="Delete section" title="Delete">{% icon "trash" 16 %}</button></form>
+      </div>
+      {% endif %}
+    </header>
+    {% for lesson in section.lessons.all %}
+      <div class="builder-lesson">
+        <span class="muted">{% if lesson.lesson_type == 'video' %}{% icon "play" 18 %}{% else %}{% icon "file" 18 %}{% endif %}</span>
+        <div class="grow">
+          {% if editable %}<a href="{% url 'studio:lesson_edit' course.pk lesson.pk %}">{{ lesson.title }}</a>{% else %}<span class="strong">{{ lesson.title }}</span>{% endif %}
+          <div class="text-xs muted">{{ lesson.get_lesson_type_display }} · {{ lesson.duration_minutes|minutes }}{% if lesson.resource_count %} · {{ lesson.resource_count }} material{{ lesson.resource_count|pluralize }}{% endif %}{% for q in lesson.quizzes.all %} · quiz: {{ q.title }}{% endfor %}</div>
+        </div>
+        {% if lesson.is_preview %}<span class="badge badge-primary">Preview</span>{% endif %}
+        {% if not lesson.is_required %}<span class="badge badge-neutral">Optional</span>{% endif %}
+        {% if lesson.completion_rule == 'quiz_pass' %}<span class="badge badge-info">Quiz completes</span>{% endif %}
+        {% if lesson.lesson_type == 'video' and not lesson.video_file and not lesson.video_url %}<span class="badge badge-danger">No video</span>{% endif %}
+        {% if editable %}
+        <div class="icon-btns">
+          {% if not forloop.first %}<form method="post" action="{% url 'studio:lesson_move' course.pk lesson.pk 'up' %}">{% csrf_token %}<button class="btn btn-ghost" type="submit" aria-label="Move lesson up">{% icon "arrow-up" 16 %}</button></form>{% endif %}
+          {% if not forloop.last %}<form method="post" action="{% url 'studio:lesson_move' course.pk lesson.pk 'down' %}">{% csrf_token %}<button class="btn btn-ghost" type="submit" aria-label="Move lesson down">{% icon "arrow-down" 16 %}</button></form>{% endif %}
+          <a class="btn btn-ghost" href="{% url 'studio:lesson_edit' course.pk lesson.pk %}" aria-label="Edit lesson">{% icon "edit" 16 %}</a>
+          <form method="post" action="{% url 'studio:lesson_delete' course.pk lesson.pk %}" data-confirm="Delete “{{ lesson.title }}”? Student completion records for this lesson will also be removed." data-confirm-title="Delete lesson?" data-confirm-button="Delete lesson">{% csrf_token %}<button class="btn btn-ghost" type="submit" aria-label="Delete lesson">{% icon "trash" 16 %}</button></form>
+        </div>
+        {% endif %}
+      </div>
+    {% empty %}
+      <div class="builder-lesson muted">No lessons in this section yet.</div>
+    {% endfor %}
+    {% if editable %}
+    <div class="builder-footer row">
+      <a class="btn btn-outline btn-sm" href="{% url 'studio:lesson_create' course.pk section.pk %}">{% icon "plus" 14 %} Add lesson</a>
+    </div>
+    {% endif %}
+  </section>
+{% empty %}
+  {% include "partials/empty.html" with icon_name="layers" title="No sections yet" text="Sections group related lessons, e.g. “Getting started” or “Working with data”. Add your first one below." %}
+{% endfor %}
+
+{% if final_quizzes %}
+  <section class="builder-section">
+    <header><span class="badge badge-info">Assessment</span><h3 class="grow">Course-level quizzes</h3><a class="btn btn-ghost btn-sm" href="{% url 'studio:quizzes' course.pk %}">Manage</a></header>
+    {% for q in final_quizzes %}<div class="builder-lesson"><span class="muted">{% icon "target" 18 %}</span><div class="grow"><a href="{% url 'studio:quiz_questions' course.pk q.pk %}">{{ q.title }}</a></div>{% if q.is_required %}<span class="badge badge-neutral">Required</span>{% endif %}</div>{% endfor %}
+  </section>
+{% endif %}
+
+{% if editable %}
+<div class="card mt-5"><div class="card-body">
+  <form method="post" action="{% url 'studio:section_create' course.pk %}" class="row row-top" data-once>
+    {% csrf_token %}
+    <div class="field grow" style="min-width:240px">
+      <label for="new-section">New section title</label>
+      <input id="new-section" type="text" name="title" maxlength="120" required placeholder="e.g. Getting started">
+    </div>
+    <button class="btn btn-primary" type="submit" style="margin-top:26px">{% icon "plus" 16 %} Add section</button>
+  </form>
+</div></div>
+{% endif %}
+{% endblock %}

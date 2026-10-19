@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block footer %}{% endblock %}
+{% block content %}
+<div class="shell">
+  <nav class="shell-nav" aria-label="Administration">
+    <div class="nav-title">Overview</div>
+    <a href="{% url 'adminpanel:dashboard' %}" class="{% if section == 'dashboard' %}active{% endif %}">{% icon "home" 18 %} Dashboard</a>
+    <a href="{% url 'adminpanel:analytics' %}" class="{% if section == 'analytics' %}active{% endif %}">{% icon "chart" 18 %} Analytics</a>
+    <div class="nav-title">Moderation</div>
+    <a href="{% url 'adminpanel:courses' %}" class="{% if section == 'courses' %}active{% endif %}">{% icon "layers" 18 %} Course reviews</a>
+    <a href="{% url 'adminpanel:reports' %}" class="{% if section == 'reports' %}active{% endif %}">{% icon "flag" 18 %} Reports</a>
+    <a href="{% url 'adminpanel:reviews' %}" class="{% if section == 'reviews' %}active{% endif %}">{% icon "star" 18 %} Ratings &amp; reviews</a>
+    <div class="nav-title">People</div>
+    <a href="{% url 'adminpanel:users' %}" class="{% if section == 'users' %}active{% endif %}">{% icon "users" 18 %} Users</a>
+    <a href="{% url 'adminpanel:applications' %}" class="{% if section == 'applications' %}active{% endif %}">{% icon "monitor" 18 %} Instructor applications</a>
+    <div class="nav-title">Platform</div>
+    <a href="{% url 'adminpanel:transactions' %}" class="{% if section == 'transactions' %}active{% endif %}">{% icon "card" 18 %} Transactions</a>
+    <a href="{% url 'adminpanel:categories' %}" class="{% if section == 'categories' %}active{% endif %}">{% icon "tag" 18 %} Categories &amp; tags</a>
+    <a href="{% url 'adminpanel:announcements' %}" class="{% if section == 'announcements' %}active{% endif %}">{% icon "bell" 18 %} Announcements</a>
+    <a href="{% url 'adminpanel:settings' %}" class="{% if section == 'settings' %}active{% endif %}">{% icon "sliders" 18 %} Settings &amp; certificates</a>
+    <a href="{% url 'adminpanel:audit' %}" class="{% if section == 'audit' %}active{% endif %}">{% icon "shield" 18 %} Audit log</a>
+  </nav>
+  <div class="shell-main">
+    {% block manage %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

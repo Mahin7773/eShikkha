@@ -1,0 +1,53 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}{{ quiz.title }} – questions{% endblock %}
+{% block studio %}
+<div class="page-header row-between">
+  <div>
+    <nav class="breadcrumbs text-sm"><a href="{% url 'studio:quizzes' course.pk %}">{% icon "chevron-left" 14 %} Quizzes</a></nav>
+    <h1>{{ quiz.title }}</h1>
+    <p>{% if quiz.lesson %}After “{{ quiz.lesson.title }}”{% else %}Course-level quiz{% endif %} · pass {{ quiz.passing_score }}% · {% if quiz.unlimited_attempts %}unlimited attempts{% else %}{{ quiz.max_attempts }} attempt{{ quiz.max_attempts|pluralize }}{% endif %}{% if quiz.time_limit_minutes %} · {{ quiz.time_limit_minutes }} min{% endif %}</p>
+  </div>
+  {% if editable %}
+  <div class="row">
+    <a class="btn btn-outline" href="{% url 'studio:quiz_edit' course.pk quiz.pk %}">{% icon "sliders" 16 %} Settings</a>
+    <details class="dropdown">
+      <summary class="btn btn-primary">{% icon "plus" 16 %} Add question {% icon "chevron-down" 14 %}</summary>
+      <div class="dropdown-menu align-right">
+        <a href="{% url 'studio:question_create' course.pk quiz.pk %}?type=single">Multiple choice (one answer)</a>
+        <a href="{% url 'studio:question_create' course.pk quiz.pk %}?type=multiple">Multiple choice (several answers)</a>
+        <a href="{% url 'studio:question_create' course.pk quiz.pk %}?type=true_false">True / False</a>
+      </div>
+    </details>
+  </div>
+  {% endif %}
+</div>
+
+{% if problems %}
+  <div class="alert alert-warning mb-5">{% icon "alert" 18 %}<div><strong>Fix these before submitting the course:</strong><ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div></div>
+{% endif %}
+
+<div class="stack">
+{% for q in questions %}
+  <div class="card">
+    <div class="card-header">
+      <div><span class="badge badge-neutral">Q{{ forloop.counter }}</span> <span class="text-xs muted">{{ q.get_question_type_display }} · {{ q.points }} point{{ q.points|pluralize }}</span></div>
+      {% if editable %}<div class="row">
+        <a class="btn btn-ghost btn-sm" href="{% url 'studio:question_edit' course.pk quiz.pk q.pk %}">{% icon "edit" 14 %} Edit</a>
+        <form method="post" action="{% url 'studio:question_delete' course.pk quiz.pk q.pk %}" data-confirm="Delete this question?" data-confirm-button="Delete">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit" aria-label="Delete question {{ forloop.counter }}">{% icon "trash" 14 %}</button></form>
+      </div>{% endif %}
+    </div>
+    <div class="card-body">
+      <p class="strong">{{ q.text|linebreaksbr }}</p>
+      <ul class="plain stack-sm">
+        {% for o in q.options.all %}<li class="row text-sm">{% if o.is_correct %}<span style="color:var(--success)">{% icon "check-circle" 16 %}</span>{% else %}<span class="subtle">{% icon "circle" 16 %}</span>{% endif %} {{ o.text }}</li>{% endfor %}
+      </ul>
+      {% if q.explanation %}<p class="text-sm muted mt-4 mb-0"><strong>Explanation:</strong> {{ q.explanation }}</p>{% endif %}
+    </div>
+  </div>
+{% empty %}
+  {% url 'studio:question_create' course.pk quiz.pk as add_url %}
+  {% include "partials/empty.html" with icon_name="help" title="No questions yet" text="Add multiple-choice or true/false questions. Each one is graded automatically." action_url=add_url action_label="Add first question" %}
+{% endfor %}
+</div>
+{% endblock %}

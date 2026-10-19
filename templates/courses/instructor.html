@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load ui humanize %}
+{% block title %}{{ instructor.display_name }} – Instructor – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="split section">
+    <div>
+      <p class="text-sm strong muted mb-2" style="text-transform:uppercase;letter-spacing:.06em">Instructor</p>
+      <h1>{{ instructor.display_name }}</h1>
+      <p class="strong" style="font-size:var(--fs-lg)">{{ instructor.headline }}</p>
+      <div class="row mt-5" style="gap:var(--s6)">
+        <div><div class="text-sm muted">Total students</div><div class="strong" style="font-size:var(--fs-2xl)">{{ stats.students|intcomma }}</div></div>
+        <div><div class="text-sm muted">Reviews</div><div class="strong" style="font-size:var(--fs-2xl)">{{ stats.reviews|intcomma }}</div></div>
+        <div><div class="text-sm muted">Rating</div><div class="strong" style="font-size:var(--fs-2xl)">{{ stats.rating|floatformat:1 }}</div></div>
+      </div>
+      {% if instructor.bio %}<h2 class="mt-6" style="font-size:var(--fs-xl)">About me</h2><div class="prose">{{ instructor.bio }}</div>{% endif %}
+      <h2 class="mt-6" style="font-size:var(--fs-xl)">Courses ({{ stats.course_count }})</h2>
+      <div class="course-grid">
+        {% for course in stats.courses %}{% include "partials/course_card.html" %}{% empty %}<p class="muted">No published courses yet.</p>{% endfor %}
+      </div>
+    </div>
+    <aside class="center">
+      <span class="avatar avatar-xl" style="width:180px;height:180px;font-size:56px">{% if instructor.avatar %}<img src="{{ instructor.avatar.url }}" alt="Photo of {{ instructor.display_name }}">{% else %}{{ instructor.initials }}{% endif %}</span>
+      {% if instructor.website %}<p class="mt-4"><a class="btn btn-outline" href="{{ instructor.website }}" target="_blank" rel="noopener">{% icon "external" 16 %} Website</a></p>{% endif %}
+      {% if user.is_authenticated and user != instructor %}<p class="text-xs mt-4"><a class="muted" href="{% url 'core:report' 'user' instructor.pk %}?next={{ request.path|urlencode }}">{% icon "flag" 12 %} Report instructor</a></p>{% endif %}
+    </aside>
+  </div>
+</div>
+{% endblock %}

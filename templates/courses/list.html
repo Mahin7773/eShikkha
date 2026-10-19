@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{% if applied.q %}Results for "{{ applied.q }}"{% elif active_category %}{{ active_category.name }} courses{% else %}All courses{% endif %} – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <span class="eyebrow">Catalogue</span>
+    {% if applied.q %}<h1>Results for “{{ applied.q }}”</h1>
+    {% elif active_category %}<h1>{{ active_category.name }}</h1><p>{{ active_category.description }}</p>
+    {% else %}<h1>Explore courses</h1><p>Every published course on {{ platform.site_name }}, filtered your way.</p>{% endif %}
+  </div>
+
+  <form method="get" class="toolbar" data-autosubmit role="search" aria-label="Search and filter courses">
+    {% for c in applied.category %}<input type="hidden" name="category" value="{{ c }}">{% endfor %}
+    <div class="searchbar">
+      {% icon "search" 16 %}
+      <label class="sr-only" for="catalog-q">Search</label>
+      <input id="catalog-q" type="search" name="q" value="{{ applied.q|default:'' }}" placeholder="Search title, topic or instructor">
+    </div>
+    <label class="sr-only" for="f-level">Level</label>
+    <select id="f-level" name="level">
+      <option value="">Any level</option>
+      {% for value, label in levels %}<option value="{{ value }}" {% if value in applied.level %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <label class="sr-only" for="f-price">Price</label>
+    <select id="f-price" name="price">
+      <option value="">Any price</option>
+      {% for value, label in price_options.items %}<option value="{{ value }}" {% if applied.price == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <label class="sr-only" for="f-rating">Rating</label>
+    <select id="f-rating" name="rating">
+      <option value="">Any rating</option>
+      {% for r in rating_options %}<option value="{{ r }}" {% if applied.rating == r %}selected{% endif %}>★ {{ r }} &amp; up</option>{% endfor %}
+    </select>
+    <label class="sr-only" for="f-sort">Sort by</label>
+    <select id="f-sort" name="sort">
+      {% for key, label in sort_options.items %}<option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <noscript><button class="btn btn-primary" type="submit">Apply</button></noscript>
+  </form>
+
+  <nav class="chip-row" aria-label="Topics">
+    <a class="chip {% if not applied.category %}active{% endif %}" href="?{% if applied.q %}q={{ applied.q|urlencode }}&{% endif %}sort={{ sort }}">All topics</a>
+    {% for cat in categories %}
+      <a class="chip {% if cat.slug in applied.category %}active{% endif %}" href="?{% if applied.q %}q={{ applied.q|urlencode }}&{% endif %}sort={{ sort }}&category={{ cat.slug }}"><span class="mega-icon" style="--h: {{ cat.pk|hue }}">{{ cat.name|initials }}</span>{{ cat.name }}</a>
+    {% endfor %}
+  </nav>
+
+  <div class="results-meta">
+    <span><strong style="color:var(--ink)">{{ page_obj.paginator.count }}</strong> course{{ page_obj.paginator.count|pluralize }}</span>
+    {% if applied %}<a class="btn btn-ghost btn-sm" href="{% url 'courses:list' %}">{% icon "x" 14 %} Clear all filters</a>{% endif %}
+  </div>
+
+  {% if page_obj.object_list %}
+    <div class="course-grid">{% for course in page_obj %}{% include "partials/course_card.html" %}{% endfor %}</div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    {% url 'courses:list' as all_url %}
+    {% include "partials/empty.html" with icon_name="search" title="No courses match your search" text="Try different keywords or remove some filters." action_url=all_url action_label="View all courses" %}
+  {% endif %}
+</div>
+{% endblock %}

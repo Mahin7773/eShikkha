@@ -1,0 +1,108 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}Review: {{ course.title }} – Admin{% endblock %}
+{% block manage %}
+<div class="page-header">
+  <nav class="breadcrumbs text-sm"><a href="{% url 'adminpanel:courses' %}">{% icon "chevron-left" 14 %} Courses</a></nav>
+  <div class="row-between">
+    <div><h1>{{ course.title }}</h1><p>{{ course.subtitle }}</p></div>
+    <div class="row">{% badge course.get_status_display course.status_tone %}<a class="btn btn-outline btn-sm" href="{{ course.get_absolute_url }}">{% icon "eye" 14 %} Course page</a><a class="btn btn-outline btn-sm" href="{% url 'learning:resume' course.slug %}">{% icon "play" 14 %} Open player</a></div>
+  </div>
+</div>
+
+<div class="grid grid-aside">
+  <div class="stack">
+    <div class="card"><div class="card-body">
+      <div class="row" style="gap:var(--s5)">
+        <div style="width:260px">{% include "partials/thumb.html" %}</div>
+        <dl class="summary-lines grow" style="margin:0">
+          <div><dt class="muted">Category</dt><dd style="margin:0">{{ course.category.name }}</dd></div>
+          <div><dt class="muted">Level · language</dt><dd style="margin:0">{{ course.get_level_display }} · {{ course.language }}</dd></div>
+          <div><dt class="muted">Price</dt><dd style="margin:0">{{ course.price|money }}{% if course.discount_price is not None %} → {{ course.discount_price|money }}{% if course.discount_ends_at %} until {{ course.discount_ends_at|date:"M j" }}{% endif %}{% endif %}</dd></div>
+          <div><dt class="muted">Completion</dt><dd style="margin:0">{% if course.sequential_progression %}sequential · {% endif %}{% if course.require_quizzes_for_completion %}quizzes required{% else %}lessons only{% endif %}{% if course.certificate_enabled %} · certificate{% endif %}</dd></div>
+          <div><dt class="muted">Students</dt><dd style="margin:0">{{ stats.students_count }}</dd></div>
+          {% if course.tags.all %}<div><dt class="muted">Tags</dt><dd style="margin:0">{{ course.tags.all|join:", " }}</dd></div>{% endif %}
+        </dl>
+      </div>
+      {% if course.promo_video or course.promo_video_url %}<p class="text-sm mt-4 mb-0">{% icon "video" 14 %} Promo video: {% if course.promo_video %}<a href="{{ course.promo_video.url }}" target="_blank" rel="noopener">uploaded file</a>{% else %}<a href="{{ course.promo_video_url }}" target="_blank" rel="noopener noreferrer">{{ course.promo_video_url }}</a>{% endif %}</p>{% endif %}
+    </div></div>
+
+    <div class="card"><div class="card-header"><h2>Description</h2></div><div class="card-body">
+      <div class="prose text-sm">{{ course.description }}</div>
+      {% if course.objectives_list %}<h3 class="mt-5" style="font-size:var(--fs-md)">Learning objectives</h3><ul class="bullet-list">{% for o in course.objectives_list %}<li>{{ o }}</li>{% endfor %}</ul>{% endif %}
+      {% if course.prerequisites_list %}<h3 class="mt-5" style="font-size:var(--fs-md)">Prerequisites</h3><ul class="bullet-list">{% for o in course.prerequisites_list %}<li>{{ o }}</li>{% endfor %}</ul>{% endif %}
+    </div></div>
+
+    <div class="card"><div class="card-header"><h2>Curriculum &amp; resources</h2></div><div class="card-body">
+      {% for s in sections %}
+        <h3 style="font-size:var(--fs-md)" class="{% if not forloop.first %}mt-5{% endif %}">{{ forloop.counter }}. {{ s.title }}</h3>
+        <ul class="plain stack-sm">
+          {% for l in s.lessons.all %}
+            <li class="text-sm">
+              <div class="row">{% if l.lesson_type == 'video' %}{% icon "play" 14 %}{% else %}{% icon "file" 14 %}{% endif %}<a href="{% url 'learning:lesson' course.slug l.pk %}">{{ l.title }}</a><span class="muted">{{ l.duration_minutes }} min</span>{% if l.is_preview %}{% badge "Preview" "primary" %}{% endif %}
+                {% if l.lesson_type == 'video' %}<span class="text-xs muted">{% if l.video_file %}uploaded video{% elif l.video_url %}{{ l.video_url|truncatechars:40 }}{% else %}<span style="color:var(--danger)">missing video</span>{% endif %}</span>{% endif %}</div>
+              {% for r in l.resources.all %}<div class="text-xs muted" style="padding-left:24px">{% icon "download" 12 %} <a href="{% url 'learning:resource' r.pk %}">{{ r.title }}</a> ({{ r.get_resource_type_display }})</div>{% endfor %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% empty %}<p class="muted">No sections.</p>{% endfor %}
+    </div></div>
+
+    {% if quizzes %}
+    <div class="card"><div class="card-header"><h2>Quizzes</h2></div><div class="card-body">
+      {% for q in quizzes %}
+        <details class="mb-4"><summary class="strong text-sm" style="cursor:pointer">{{ q.title }} — {{ q.questions.all|length }} question{{ q.questions.all|length|pluralize }}, pass {{ q.passing_score }}%</summary>
+          <ol class="text-sm mt-2">{% for question in q.questions.all %}<li class="mb-2">{{ question.text }}<ul class="plain">{% for o in question.options.all %}<li class="{% if o.is_correct %}strong{% else %}muted{% endif %}">{% if o.is_correct %}✓{% else %}·{% endif %} {{ o.text }}</li>{% endfor %}</ul></li>{% endfor %}</ol>
+        </details>
+      {% endfor %}
+    </div></div>
+    {% endif %}
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-header"><h2>Decision</h2></div>
+      <div class="card-body">
+        {% if problems %}<div class="alert alert-warning mb-4">{% icon "alert" 16 %}<div><strong>Readiness issues</strong><ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div></div>{% endif %}
+        {% if actions %}
+          <form method="post" action="{% url 'adminpanel:course_moderate' course.pk %}" data-confirm="This decision is recorded and the instructor will be notified." data-confirm-title="Record moderation decision?" data-confirm-button="Record decision" data-confirm-tone="primary">
+            {% csrf_token %}
+            <fieldset style="border:0;padding:0;margin:0">
+              <legend class="strong text-sm mb-2">Action</legend>
+              {% for value, label in actions %}<label class="outcome"><input type="radio" name="action" value="{{ value }}" required {% if forloop.first %}checked{% endif %}><span class="text-sm strong">{{ label }}</span></label>{% endfor %}
+            </fieldset>
+            <div class="field mt-4"><label for="reason">Reason / feedback to instructor</label><textarea id="reason" name="reason" rows="4" placeholder="Required for everything except approval"></textarea></div>
+            <button class="btn btn-primary btn-block mt-4" type="submit">Record decision</button>
+          </form>
+        {% else %}<p class="text-sm muted mb-0">No moderation actions available for a course that is {{ course.get_status_display|lower }}.</p>{% endif %}
+        {% if course.is_published or course.is_featured %}
+          <hr>
+          <form method="post" action="{% url 'adminpanel:course_feature' course.pk %}">{% csrf_token %}
+            <button class="btn btn-outline btn-block" type="submit">{% icon "star" 14 %} {% if course.is_featured %}Remove from featured{% else %}Feature on home page{% endif %}</button></form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card"><div class="card-header"><h2>Instructor</h2></div><div class="card-body">
+      <div class="row"><span class="avatar">{{ course.instructor.initials }}</span><div><a class="strong" href="{% url 'adminpanel:user_detail' course.instructor.pk %}">{{ course.instructor.display_name }}</a><div class="text-xs muted">{{ course.instructor.email }}</div></div></div>
+      <p class="text-sm mt-4">{{ course.instructor.headline }}</p>
+      {% if instructor_application %}<p class="text-xs muted">Approved instructor since {{ instructor_application.reviewed_at|date:"M j, Y" }} · expertise: {{ instructor_application.expertise }}</p>{% endif %}
+      {% if instructor_courses %}<p class="text-xs muted mb-0">Other courses: {% for c in instructor_courses %}<a href="{% url 'adminpanel:course_review' c.pk %}">{{ c.title|truncatechars:30 }}</a> ({{ c.get_status_display|lower }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+    </div></div>
+
+    {% if reports %}
+    <div class="card"><div class="card-header"><h2>Reports ({{ reports|length }})</h2></div><div class="card-body">
+      {% for r in reports %}<p class="text-sm">{{ r.get_reason_display }} · {{ r.get_status_display }}<br><span class="muted">{{ r.details|truncatechars:120 }}</span></p>{% endfor %}
+      <a class="text-sm" href="{% url 'adminpanel:reports' %}?target=course">Open reports queue</a>
+    </div></div>
+    {% endif %}
+
+    <div class="card"><div class="card-header"><h2>History</h2></div><div class="card-body">
+      <ul class="timeline">{% for d in timeline %}
+        <li class="{% if d.action == 'approved' %}tone-success{% elif d.action == 'rejected' %}tone-danger{% elif d.action == 'changes_requested' or d.action == 'unpublished' %}tone-warning{% endif %}">
+          <div class="strong text-sm">{{ d.get_action_display }}</div><div class="when">{{ d.created_at|date:"M j, Y H:i" }} · {{ d.actor.display_name|default:"System" }}</div>{% if d.reason %}<div class="reason">{{ d.reason }}</div>{% endif %}
+        </li>{% empty %}<li class="muted text-sm">No history.</li>{% endfor %}</ul>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

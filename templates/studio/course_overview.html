@@ -1,0 +1,91 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}{{ course.title }} – Studio{% endblock %}
+{% block studio %}
+<div class="page-header row-between">
+  <div><h1>{{ course.title }}</h1><p>{{ course.category.name }} · {{ course.get_level_display }} · {{ course.current_price|money }}</p></div>
+  <div class="row">
+    <a class="btn btn-outline" href="{{ course.get_absolute_url }}">{% icon "eye" 16 %} Course page</a>
+  </div>
+</div>
+
+{% with feedback=course.latest_feedback %}
+{% if course.status == 'changes_requested' or course.status == 'rejected' or course.status == 'unpublished' %}
+  <div class="alert {% if course.status == 'rejected' %}alert-error{% else %}alert-warning{% endif %} mb-5">{% icon "alert" 18 %}
+    <div><strong>{{ course.get_status_display }}{% if feedback %} by {{ feedback.actor.display_name|default:"an administrator" }} on {{ feedback.created_at|date:"M j, Y" }}{% endif %}.</strong>
+      {% if feedback %}<div class="mt-2" style="white-space:pre-line">{{ feedback.reason }}</div>{% endif %}
+      <div class="mt-2">Update the course and submit it again when you're ready.</div></div></div>
+{% elif course.status == 'submitted' %}
+  <div class="alert alert-info mb-5">{% icon "clock" 18 %}<div><strong>Under review.</strong> Submitted {{ course.submitted_at|date:"M j, Y H:i" }}. Editing is locked until an administrator makes a decision.</div></div>
+{% elif course.status == 'published' %}
+  <div class="alert alert-success mb-5">{% icon "check-circle" 18 %}<div><strong>Live in the marketplace</strong> since {{ course.published_at|date:"M j, Y" }}.</div></div>
+{% elif course.status == 'archived' %}
+  <div class="alert alert-info mb-5">{% icon "archive" 18 %}<div><strong>Archived.</strong> Hidden from the marketplace; enrolled students keep access. Restore it to draft to make changes.</div></div>
+{% endif %}
+{% endwith %}
+
+<div class="stat-grid mb-5">
+  <div class="stat"><div class="label">Students</div><div class="value">{{ stats.students }}</div></div>
+  <div class="stat"><div class="label">Completion rate</div><div class="value">{{ stats.completion_rate }}%</div><div class="hint">{{ stats.completed }} completed</div></div>
+  <div class="stat"><div class="label">Avg. progress</div><div class="value">{{ stats.avg_progress }}%</div></div>
+  <div class="stat"><div class="label">Rating</div><div class="value">{{ stats.rating|floatformat:1 }}</div><div class="hint">{{ stats.reviews }} review{{ stats.reviews|pluralize }}</div></div>
+  <div class="stat"><div class="label">Est. earnings</div><div class="value">{{ stats.net|usd }}</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header"><h2>Publishing</h2>{% badge course.get_status_display course.status_tone %}</div>
+    <div class="card-body">
+      {% if course.can_be_submitted %}
+        <h3 style="font-size:var(--fs-md)">Readiness checklist</h3>
+        <ul class="checklist mb-4">
+          <li>{% if lesson_count %}<span class="ok">{% icon "check-circle" 16 %}</span>{% else %}<span class="bad">{% icon "x" 16 %}</span>{% endif %} {{ lesson_count }} lesson{{ lesson_count|pluralize }}</li>
+          <li><span class="ok">{% icon "info" 16 %}</span> {{ quiz_count }} quiz{{ quiz_count|pluralize:"zes" }} (optional)</li>
+          {% for p in problems %}<li><span class="bad">{% icon "alert" 16 %}</span> {{ p }}</li>{% endfor %}
+          {% if not problems %}<li><span class="ok">{% icon "check-circle" 16 %}</span> Ready to submit</li>{% endif %}
+        </ul>
+        <form method="post" action="{% url 'studio:course_submit' course.pk %}" data-once>
+          {% csrf_token %}
+          {% include "partials/form.html" with form=note_form single=True %}
+          <button class="btn btn-primary mt-4" type="submit" {% if problems %}disabled{% endif %}>{% icon "send" 16 %} {% if platform.require_course_approval %}Submit for review{% else %}Publish course{% endif %}</button>
+        </form>
+      {% elif course.status == 'published' %}
+        <p class="text-sm muted">Your course is visible to everyone. You can keep improving content while it's live.</p>
+      {% elif course.status == 'submitted' %}
+        <p class="text-sm muted">You'll get a notification when the review is complete.</p>
+      {% endif %}
+
+      <hr>
+      <div class="row">
+        {% if course.status == 'archived' %}
+          <form method="post" action="{% url 'studio:course_restore' course.pk %}">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">{% icon "refresh" 14 %} Restore to draft</button></form>
+        {% else %}
+          <form method="post" action="{% url 'studio:course_archive' course.pk %}" data-confirm="Archiving hides the course from the marketplace. Enrolled students keep access." data-confirm-title="Archive this course?" data-confirm-button="Archive">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">{% icon "archive" 14 %} Archive</button></form>
+        {% endif %}
+        {% if course.status == 'draft' and not stats.students %}
+          <form method="post" action="{% url 'studio:course_delete' course.pk %}" data-confirm="This permanently deletes the draft, its lessons, quizzes and files." data-confirm-title="Delete this draft?" data-confirm-button="Delete course">{% csrf_token %}<button class="btn btn-danger-outline btn-sm" type="submit">{% icon "trash" 14 %} Delete draft</button></form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h2>Moderation history</h2></div>
+    <div class="card-body">
+      {% if timeline %}
+        <ul class="timeline">
+          {% for d in timeline %}
+            <li class="{% if d.action == 'approved' %}tone-success{% elif d.action == 'rejected' %}tone-danger{% elif d.action == 'changes_requested' or d.action == 'unpublished' %}tone-warning{% endif %}">
+              <div class="strong text-sm">{{ d.get_action_display }}</div>
+              <div class="when">{{ d.created_at|date:"M j, Y H:i" }} · {{ d.actor.display_name|default:"System" }}</div>
+              {% if d.reason %}<div class="reason">{{ d.reason }}</div>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted text-sm mb-0">No moderation activity yet. Submit the course when it's ready.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

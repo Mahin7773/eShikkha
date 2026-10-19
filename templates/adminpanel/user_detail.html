@@ -1,0 +1,109 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}{{ member.display_name }} – Admin{% endblock %}
+{% block manage %}
+<div class="page-header row">
+  <span class="avatar avatar-lg">{{ member.initials }}</span>
+  <div class="grow">
+    <nav class="breadcrumbs text-sm"><a href="{% url 'adminpanel:users' %}">{% icon "chevron-left" 14 %} Users</a></nav>
+    <h1>{{ member.display_name }}</h1>
+    <p>@{{ member.username }} · {{ member.email }} · joined {{ member.date_joined|date:"M j, Y" }}{% if member.last_login %} · last login {{ member.last_login|timesince }} ago{% endif %}</p>
+  </div>
+  {% badge member.get_role_display 'neutral' %}
+  {% if member.is_active %}{% badge "Active" "success" %}{% else %}{% badge "Suspended" "danger" %}{% endif %}
+</div>
+
+{% if not member.is_active and member.suspension_reason %}
+  <div class="alert alert-error mb-5">{% icon "alert" 18 %}<div><strong>Suspended {{ member.suspended_at|date:"M j, Y" }}:</strong> {{ member.suspension_reason }}</div></div>
+{% endif %}
+
+<div class="grid grid-aside">
+  <div class="stack">
+    {% if member.is_student or enrollments %}
+    <div class="card">
+      <div class="card-header"><h2>Enrolments</h2></div>
+      <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+        <thead><tr><th>Course</th><th>Source</th><th>Status</th><th>Progress</th></tr></thead>
+        <tbody>{% for e in enrollments %}<tr><td>{{ e.course.title }}</td><td>{{ e.get_source_display }}</td><td>{{ e.get_status_display }}</td><td>{{ e.progress_percent }}%{% if e.is_completed %} {% badge "Completed" "success" %}{% endif %}</td></tr>{% empty %}<tr><td class="muted">No enrolments.</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    {% endif %}
+    {% if courses %}
+    <div class="card">
+      <div class="card-header"><h2>Courses taught</h2></div>
+      <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+        <tbody>{% for c in courses %}<tr><td><a href="{% url 'adminpanel:course_review' c.pk %}">{{ c.title }}</a></td><td>{% badge c.get_status_display c.status_tone %}</td><td class="num">{{ c.students_count }} students</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    {% endif %}
+    {% if orders %}
+    <div class="card">
+      <div class="card-header"><h2>Recent orders</h2></div>
+      <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+        <tbody>{% for o in orders %}<tr><td><a class="mono" href="{% url 'adminpanel:order_detail' o.order_number %}">{{ o.order_number }}</a></td><td>{% badge o.get_status_display o.status_tone %}</td><td class="num">{{ o.total|usd }}</td><td class="text-sm">{{ o.created_at|date:"M j, Y" }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    {% endif %}
+    {% if reports %}
+    <div class="card"><div class="card-header"><h2>Reports about this user</h2></div><div class="card-body">
+      {% for r in reports %}<p class="text-sm">{{ r.get_reason_display }} — {{ r.details|default:"(no details)" }} <span class="muted">· {{ r.get_status_display }}</span></p>{% endfor %}
+    </div></div>
+    {% endif %}
+    <div class="card"><div class="card-header"><h2>Audit trail</h2></div><div class="card-body">
+      <ul class="timeline">{% for log in audit %}<li><div class="text-sm"><span class="mono">{{ log.action }}</span> by {{ log.actor.display_name|default:"System" }}</div><div class="when">{{ log.created_at|date:"M j, Y H:i" }}{% if log.details.reason %} · {{ log.details.reason }}{% endif %}</div></li>{% empty %}<li class="muted text-sm">No administrative actions recorded.</li>{% endfor %}</ul>
+    </div></div>
+  </div>
+
+  <div class="stack">
+    {% if member != user %}
+    <div class="card"><div class="card-body">
+      <h2 style="font-size:var(--fs-lg)">Account status</h2>
+      {% if member.is_active %}
+        <form method="post" action="{% url 'adminpanel:user_suspend' member.pk %}" data-confirm="The user will be signed out and unable to log in until reactivated." data-confirm-title="Suspend {{ member.display_name }}?" data-confirm-button="Suspend account">
+          {% csrf_token %}<input type="hidden" name="action" value="suspend">
+          <div class="field"><label for="suspend-reason">Reason (required, recorded in audit log)</label><textarea id="suspend-reason" name="reason" rows="2" required></textarea></div>
+          <button class="btn btn-danger mt-4" type="submit">{% icon "lock" 14 %} Suspend account</button>
+        </form>
+      {% else %}
+        <form method="post" action="{% url 'adminpanel:user_suspend' member.pk %}" data-confirm="Restore this user's access?" data-confirm-button="Reactivate" data-confirm-tone="primary">
+          {% csrf_token %}<input type="hidden" name="action" value="reactivate">
+          <button class="btn btn-primary" type="submit">{% icon "refresh" 14 %} Reactivate account</button>
+        </form>
+      {% endif %}
+    </div></div>
+
+    {% if not member.is_superuser %}
+    <div class="card"><div class="card-body">
+      <h2 style="font-size:var(--fs-lg)">Role</h2>
+      <form method="post" action="{% url 'adminpanel:user_role' member.pk %}" class="row" data-confirm="Changing a role changes what this user can access." data-confirm-title="Change role?" data-confirm-button="Change role" data-confirm-tone="primary">
+        {% csrf_token %}
+        <label class="sr-only" for="role-select">Role</label>
+        <select id="role-select" name="role" class="input grow">{% for v, l in roles %}<option value="{{ v }}" {% if member.role == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+        <button class="btn btn-outline" type="submit">Update</button>
+      </form>
+    </div></div>
+    {% endif %}
+    {% endif %}
+
+    {% if member.is_student %}
+    <div class="card"><div class="card-body">
+      <h2 style="font-size:var(--fs-lg)">Grant course access</h2>
+      <p class="text-sm muted">Authorised enrolment without payment (e.g. scholarship). Recorded in the audit log.</p>
+      <form method="post" action="{% url 'adminpanel:user_grant' member.pk %}" data-once>
+        {% csrf_token %}
+        {% include "partials/form.html" with form=grant_form single=True %}
+        <button class="btn btn-outline mt-4" type="submit">Grant access</button>
+      </form>
+    </div></div>
+    {% endif %}
+
+    {% if applications %}
+    <div class="card"><div class="card-body">
+      <h2 style="font-size:var(--fs-lg)">Instructor applications</h2>
+      {% for a in applications %}<p class="text-sm">{{ a.created_at|date:"M j, Y" }} — {{ a.get_status_display }}{% if a.review_note %}<br><span class="muted">{{ a.review_note }}</span>{% endif %}</p>{% endfor %}
+    </div></div>
+    {% endif %}
+    <p class="text-xs muted">Administrators cannot sign in as other users. Use the views above to inspect accounts.</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% load ui %}<li>{% if can_access %}<a href="{% url 'assessments:quiz' course.slug q.quiz.pk %}">{% else %}<div>{% endif %}
+  {% if q.passed %}<span style="color:var(--success)">{% icon "check-circle" 18 %}</span>{% else %}{% icon "target" 18 %}{% endif %}
+  <span class="grow"><span class="strong">{{ q.quiz.title }}</span><br><span class="text-xs muted">{{ label }} · pass mark {{ q.quiz.passing_score }}%{% if q.quiz.time_limit_minutes %} · {{ q.quiz.time_limit_minutes }} min{% endif %}{% if q.passed %} · Passed{% endif %}</span></span>
+  {% if can_access %}{% icon "chevron-right" 16 %}</a>{% else %}{% icon "lock" 16 %}</div>{% endif %}
+</li>

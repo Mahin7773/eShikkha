@@ -1,0 +1,25 @@
+{% extends "layouts/studio.html" %}
+{% load ui humanize %}
+{% block title %}Reviews – {{ course.title }}{% endblock %}
+{% block studio %}
+<div class="page-header"><h1>Reviews</h1><p>What students are saying about this course.</p></div>
+{% if stats.reviews %}
+  <div class="card mb-5"><div class="card-body rating-summary">
+    <div class="rating-big"><strong>{{ stats.rating|floatformat:1 }}</strong>{% stars stats.rating show_number=False %}<div class="text-sm muted">{{ stats.reviews }} review{{ stats.reviews|pluralize }}</div></div>
+    <div class="stack-sm">{% for row in distribution %}<div class="dist-row"><div class="track"><span style="width:{{ row.percent }}%"></span></div>{% stars row.stars show_number=False %}<span class="text-sm muted">{{ row.count }}</span></div>{% endfor %}</div>
+  </div></div>
+  <div class="card"><div class="card-body">
+    {% for review in reviews %}
+      <article class="review">
+        <div class="review-head"><span class="avatar">{{ review.student.initials }}</span>
+          <div class="grow"><div class="strong text-sm">{{ review.student.display_name }}</div><div class="row" style="gap:8px">{% stars review.rating show_number=False %}<span class="text-xs muted">{{ review.created_at|naturaltime }}</span></div></div>
+          <a class="btn btn-ghost btn-sm" href="{% url 'core:report' 'review' review.pk %}?next={{ request.path|urlencode }}">{% icon "flag" 14 %} Report</a>
+        </div>
+        {% if review.comment %}<p class="text-sm mb-0 prose">{{ review.comment }}</p>{% else %}<p class="text-sm muted mb-0">No written feedback.</p>{% endif %}
+      </article>
+    {% endfor %}
+  </div></div>
+{% else %}
+  {% include "partials/empty.html" with icon_name="star" title="No reviews yet" text="Students can review once they've made some progress in the course." %}
+{% endif %}
+{% endblock %}

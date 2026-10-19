@@ -1,0 +1,125 @@
+erDiagram
+    USER ||--o{ COURSE : teaches
+    USER ||--o{ ENROLLMENT : "enrols in"
+    USER ||--o{ ORDER : places
+    USER ||--o{ REVIEW : writes
+    USER ||--o{ QUIZ_ATTEMPT : makes
+
+    COURSE ||--o{ SECTION : contains
+    SECTION ||--o{ LESSON : contains
+    COURSE ||--o{ QUIZ : has
+    QUIZ ||--o{ QUESTION : has
+    QUIZ ||--o{ QUIZ_ATTEMPT : "attempted in"
+
+    COURSE ||--o{ ENROLLMENT : "enrolled via"
+    ENROLLMENT ||--o{ LESSON_COMPLETION : tracks
+    LESSON ||--o{ LESSON_COMPLETION : "completed as"
+    ENROLLMENT ||--o| CERTIFICATE : earns
+
+    ORDER ||--|{ ORDER_ITEM : contains
+    COURSE ||--o{ ORDER_ITEM : "sold as"
+    ORDER ||--o{ PAYMENT : "paid by"
+    ORDER |o--o{ ENROLLMENT : grants
+    COURSE ||--o{ REVIEW : receives
+
+    USER {
+        int id PK
+        string username UK
+        string email UK
+        string role "student / instructor / admin"
+        bool is_active
+    }
+    COURSE {
+        int id PK
+        int instructor_id FK
+        string title
+        string slug UK
+        string status "draft / submitted / published ..."
+        decimal price
+        decimal discount_price
+    }
+    SECTION {
+        int id PK
+        int course_id FK
+        string title
+        int order
+    }
+    LESSON {
+        int id PK
+        int section_id FK
+        string title
+        string lesson_type "video / article"
+        string video_url
+        bool is_required
+    }
+    QUIZ {
+        int id PK
+        int course_id FK
+        string title
+        int passing_score
+        int max_attempts
+        int time_limit_minutes
+    }
+    QUESTION {
+        int id PK
+        int quiz_id FK
+        string text
+        string question_type
+        int points
+    }
+    QUIZ_ATTEMPT {
+        int id PK
+        int quiz_id FK
+        int student_id FK
+        int attempt_number
+        decimal score_percent
+        bool passed
+    }
+    ENROLLMENT {
+        int id PK
+        int student_id FK "unique with course_id"
+        int course_id FK
+        int order_id FK
+        string status
+        int progress_percent
+        datetime completed_at
+    }
+    LESSON_COMPLETION {
+        int id PK
+        int enrollment_id FK
+        int lesson_id FK
+        datetime completed_at
+    }
+    CERTIFICATE {
+        int id PK
+        int enrollment_id FK "one per enrollment"
+        string certificate_number UK
+        datetime issued_at
+    }
+    REVIEW {
+        int id PK
+        int course_id FK
+        int student_id FK
+        int rating "1-5"
+        string comment
+    }
+    ORDER {
+        int id PK
+        int student_id FK
+        string order_number UK
+        string status
+        decimal total
+    }
+    ORDER_ITEM {
+        int id PK
+        int order_id FK
+        int course_id FK
+        decimal price_paid
+    }
+    PAYMENT {
+        int id PK
+        int order_id FK
+        string transaction_id UK
+        string status "pending / successful / failed ..."
+        decimal amount
+    }

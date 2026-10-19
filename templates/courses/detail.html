@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% load ui humanize %}
+{% block title %}{{ course.title }} – {{ platform.site_name }}{% endblock %}
+{% block meta_description %}{{ course.subtitle|default:course.description|truncatechars:155 }}{% endblock %}
+{% block content %}
+<header class="cd-head">
+  <div class="container">
+    <div class="cd-head-grid">
+      <div>
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="{% url 'courses:list' %}">Courses</a>{% icon "chevron-right" 14 %}
+          <a href="{% url 'courses:list' %}?category={{ course.category.slug }}">{{ course.category.name }}</a>
+        </nav>
+        {% if not course.is_published %}
+          <div class="alert alert-warning mt-4">{% icon "eye" 18 %}<div>{% if is_owner %}Preview — this course is <strong>{{ course.get_status_display|lower }}</strong> and not visible in the catalogue.{% else %}This course is no longer open to new students. You keep access as an enrolled learner.{% endif %}</div></div>
+        {% endif %}
+        <h1>{{ course.title }}</h1>
+        {% if course.subtitle %}<p class="subtitle">{{ course.subtitle }}</p>{% endif %}
+        <div class="cd-facts">
+          {% rating_pill stats.rating_avg stats.rating_count %}
+          {% if course.is_featured %}<span class="badge badge-primary">Editor's pick</span>{% endif %}
+          <span>{% icon "users" 15 %} {{ stats.students_count|intcomma }} learner{{ stats.students_count|pluralize }}</span>
+          <span>{% icon "chart" 15 %} {{ course.get_level_display }}</span>
+          <span>{% icon "clock" 15 %} {{ course.total_duration_minutes|minutes }}</span>
+          <span>{% icon "globe" 15 %} {{ course.language }}</span>
+        </div>
+        <div class="cd-by">
+          <span class="avatar">{% if course.instructor.avatar %}<img src="{{ course.instructor.avatar.url }}" alt="">{% else %}{{ course.instructor.initials }}{% endif %}</span>
+          <div>Taught by <a href="{% url 'courses:instructor' course.instructor.username %}">{{ course.instructor.display_name }}</a>{% if course.published_at %}<div class="text-xs muted">Published {{ course.published_at|date:"F Y" }}</div>{% endif %}</div>
+        </div>
+      </div>
+      <div class="cd-media">
+        {% if course.promo_video or course.promo_video_url %}
+          <div class="video-frame">
+            {% if course.promo_video %}<video controls preload="metadata" src="{{ course.promo_video.url }}"></video>
+            {% elif course.promo_embed_url %}<iframe src="{{ course.promo_embed_url }}" title="Course preview video" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+            {% else %}<video controls preload="metadata" src="{{ course.promo_video_url }}"></video>{% endif %}
+          </div>
+        {% else %}
+          {% include "partials/thumb.html" %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="anchor-nav" aria-label="Course sections">
+  <div class="container">
+    <a href="#overview">Overview</a>
+    <a href="#curriculum">Curriculum</a>
+    <a href="#instructor">Instructor</a>
+    <a href="#reviews">Reviews{% if stats.rating_count %} ({{ stats.rating_count }}){% endif %}</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="cd-body">
+    <div>
+      <section id="overview">
+        {% if course.objectives_list %}
+          <h2>What you'll be able to do</h2>
+          <ol class="objectives">{% for o in course.objectives_list %}<li>{{ o }}</li>{% endfor %}</ol>
+        {% endif %}
+        <h2 class="mt-6">About this course</h2>
+        <div class="prose">{{ course.description }}</div>
+        {% if course.prerequisites_list or course.audience_list %}
+          <div class="info-pair mt-5">
+            {% if course.prerequisites_list %}<div class="box"><h3>{% icon "list" 16 %} Before you start</h3><ul class="bullet-list">{% for p in course.prerequisites_list %}<li>{{ p }}</li>{% endfor %}</ul></div>{% endif %}
+            {% if course.audience_list %}<div class="box"><h3>{% icon "users" 16 %} Who it's for</h3><ul class="bullet-list">{% for a in course.audience_list %}<li>{{ a }}</li>{% endfor %}</ul></div>{% endif %}
+          </div>
+        {% endif %}
+      </section>
+
+      <section id="curriculum" aria-labelledby="curriculum-h">
+        <div class="section-head">
+          <h2 id="curriculum-h">Curriculum</h2>
+          <span class="text-sm muted">{{ sections|length }} module{{ sections|length|pluralize }} · {{ lesson_count }} lesson{{ lesson_count|pluralize }}{% if quiz_count %} · {{ quiz_count }} quiz{{ quiz_count|pluralize:"zes" }}{% endif %}</span>
+        </div>
+        <div class="curriculum">
+          {% for section in sections %}
+            <details {% if forloop.first %}open{% endif %}>
+              <summary><span><span class="mod">{{ forloop.counter }}</span>{{ section.title }}</span><span class="row text-sm muted" style="font-weight:400">{{ section.lessons.all|length }} lesson{{ section.lessons.all|length|pluralize }} {% icon "chevron-down" 16 "chev" %}</span></summary>
+              <ul>
+                {% for lesson in section.lessons.all %}
+                  <li>
+                    {% if lesson.lesson_type == 'video' %}{% icon "play" 16 %}{% else %}{% icon "file" 16 %}{% endif %}
+                    <span class="grow">{% if lesson.is_preview and course.is_published %}<a href="{% url 'learning:lesson' course.slug lesson.pk %}">{{ lesson.title }}</a>{% else %}{{ lesson.title }}{% endif %}</span>
+                    {% if lesson.is_preview %}<span class="badge badge-primary">Free preview</span>{% endif %}
+                    {% if lesson.resources.all %}<span class="text-xs muted">{% icon "download" 12 %} {{ lesson.resources.all|length }}</span>{% endif %}
+                    <span class="text-xs muted nowrap">{{ lesson.duration_minutes|minutes }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% empty %}
+            <p class="muted" style="padding:var(--s4)">The curriculum is being prepared.</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section id="instructor" aria-labelledby="instructor-h">
+        <h2 id="instructor-h">Your instructor</h2>
+        <div class="teacher">
+          <span class="avatar avatar-xl">{% if course.instructor.avatar %}<img src="{{ course.instructor.avatar.url }}" alt="">{% else %}{{ course.instructor.initials }}{% endif %}</span>
+          <div class="grow">
+            <a href="{% url 'courses:instructor' course.instructor.username %}" class="strong" style="font-size:var(--fs-lg)">{{ course.instructor.display_name }}</a>
+            <p class="muted text-sm mb-0">{{ course.instructor.headline }}</p>
+            <div class="teacher-stats">
+              <span>{% icon "star" 12 %} {{ instructor.rating|floatformat:1 }} rating</span>
+              <span>{% icon "message" 12 %} {{ instructor.reviews }} review{{ instructor.reviews|pluralize }}</span>
+              <span>{% icon "users" 12 %} {{ instructor.students|intcomma }} learner{{ instructor.students|pluralize }}</span>
+              <span>{% icon "play" 12 %} {{ instructor.course_count }} course{{ instructor.course_count|pluralize }}</span>
+            </div>
+            {% if course.instructor.bio %}<p class="prose text-sm mb-0">{{ course.instructor.bio|truncatewords:80 }}</p>{% endif %}
+          </div>
+        </div>
+      </section>
+
+      <section id="reviews" aria-labelledby="reviews-h">
+        <h2 id="reviews-h">What learners say</h2>
+        {% if stats.rating_count %}
+          <div class="rating-summary mb-5">
+            <div class="rating-big"><strong>{{ stats.rating_avg|floatformat:1 }}</strong>{% stars stats.rating_avg show_number=False %}<div class="text-sm muted">{{ stats.rating_count }} review{{ stats.rating_count|pluralize }}</div></div>
+            <div class="stack-sm">
+              {% for row in distribution %}
+                <div class="dist-row"><div class="track"><span style="width:{{ row.percent }}%"></span></div>{% stars row.stars show_number=False %}<span class="text-sm muted">{{ row.percent }}%</span></div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if user.is_authenticated and enrollment %}
+          <div class="card mb-5"><div class="card-body">
+            {% if can_review %}
+              <h3 style="font-size:var(--fs-md)">{% if my_review %}Update your review{% else %}Rate this course{% endif %}</h3>
+              {% if my_review.is_hidden %}<div class="alert alert-warning mb-4">{% icon "alert" 16 %}<div>Your review is hidden by a moderator: {{ my_review.hidden_reason }}</div></div>{% endif %}
+              <form method="post" action="{% url 'courses:review' course.slug %}" data-once>
+                {% csrf_token %}
+                <fieldset class="star-input" aria-label="Rating">
+                  <legend class="sr-only">Rating</legend>
+                  {% for value, label in review_form.fields.rating.choices %}
+                    <input type="radio" id="rate-{{ value }}" name="rating" value="{{ value }}" {% if review_form.rating.value|stringformat:'s' == value|stringformat:'s' %}checked{% endif %} required>
+                    <label for="rate-{{ value }}" title="{{ label }}">★<span class="sr-only">{{ label }}</span></label>
+                  {% endfor %}
+                </fieldset>
+                <div class="field mt-4">
+                  <label for="id_comment">Your review</label>
+                  <textarea id="id_comment" name="comment" rows="4" placeholder="What did you like? What could be better?">{{ review_form.comment.value|default:'' }}</textarea>
+                </div>
+                <button class="btn btn-primary mt-4" type="submit">{% if my_review %}Update review{% else %}Submit review{% endif %}</button>
+              </form>
+            {% else %}
+              <div class="row text-sm muted">{% icon "info" 16 %} {{ review_block_reason }}</div>
+            {% endif %}
+          </div></div>
+        {% endif %}
+
+        {% for review in reviews %}
+          <article class="review">
+            <div class="review-head">
+              <span class="avatar">{% if review.student.avatar %}<img src="{{ review.student.avatar.url }}" alt="">{% else %}{{ review.student.initials }}{% endif %}</span>
+              <div class="grow"><div class="strong text-sm">{{ review.student.display_name }}</div><div class="row" style="gap:8px">{% stars review.rating show_number=False %}<span class="text-xs muted">{{ review.created_at|naturaltime }}</span></div></div>
+              {% if user.is_authenticated and review.student != user %}<a class="btn btn-ghost btn-sm" href="{% url 'core:report' 'review' review.pk %}?next={{ request.path|urlencode }}%23reviews" aria-label="Report review by {{ review.student.display_name }}">{% icon "flag" 14 %}</a>{% endif %}
+            </div>
+            {% if review.comment %}<p class="text-sm mb-0 prose">{{ review.comment }}</p>{% endif %}
+          </article>
+        {% empty %}
+          <p class="muted">No reviews yet. Enrolled learners can review after making some progress.</p>
+        {% endfor %}
+      </section>
+    </div>
+
+    <aside class="enrol-box" aria-label="Enrolment">
+      {% if enrollment %}
+        <span class="eyebrow">Enrolled</span>
+        <div class="progress mt-4"><span style="width: {{ enrollment.progress_percent }}%"></span></div>
+        <div class="progress-label"><span>{{ enrollment.progress_percent }}% complete</span>{% if enrollment.is_completed %}<span>Completed {{ enrollment.completed_at|date:"M j, Y" }}</span>{% endif %}</div>
+        <a class="btn btn-primary btn-block btn-lg mt-4" href="{% url 'learning:resume' course.slug %}">{% if enrollment.progress_percent %}Continue learning{% else %}Start course{% endif %}</a>
+      {% elif is_owner %}
+        <p class="text-sm muted">{% if user.is_platform_admin and course.instructor != user %}You are viewing this course as an administrator.{% else %}You are the instructor of this course.{% endif %}</p>
+        <a class="btn btn-primary btn-block" href="{% url 'learning:resume' course.slug %}">{% icon "eye" 16 %} Preview course content</a>
+        {% if course.instructor == user %}<a class="btn btn-outline btn-block mt-2" href="{% url 'studio:course' course.pk %}">Manage in studio</a>
+        {% else %}<a class="btn btn-outline btn-block mt-2" href="{% url 'adminpanel:course_review' course.pk %}">Open moderation view</a>{% endif %}
+      {% else %}
+        <div class="row" style="align-items:baseline"><span class="price price-lg">{{ course.current_price|money }}</span>
+          {% if course.has_active_discount %}<span class="price-old">{{ course.price|money }}</span><span class="badge badge-warning">{{ course.discount_percent }}% off</span>{% endif %}</div>
+        {% if course.has_active_discount and course.discount_ends_at %}<p class="text-xs" style="color:var(--accent)">{% icon "clock" 12 %} Offer ends {{ course.discount_ends_at|naturaltime }}</p>{% endif %}
+
+        {% if not course.is_published %}
+          <p class="muted text-sm mt-4">Not available for purchase.</p>
+        {% elif not user.is_authenticated %}
+          <a class="btn btn-primary btn-block btn-lg mt-4" href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">{% if course.is_free %}Log in to enrol for free{% else %}Log in to enrol{% endif %}</a>
+          <p class="text-xs muted center mt-2 mb-0">New here? <a href="{% url 'accounts:register' %}">Create a free account</a></p>
+        {% elif not user.is_student %}
+          <div class="alert alert-info mt-4">{% icon "info" 16 %}<div>Purchasing is available to student accounts.</div></div>
+        {% elif course.is_free %}
+          <form method="post" action="{% url 'commerce:enroll_free' course.pk %}" class="mt-4" data-once>{% csrf_token %}
+            <button class="btn btn-primary btn-block btn-lg" type="submit">Enrol for free</button></form>
+        {% else %}
+          <form method="post" action="{% url 'commerce:buy_now' course.pk %}" class="mt-4" data-once>{% csrf_token %}
+            <button class="btn btn-primary btn-block btn-lg" type="submit">Enrol now</button></form>
+          {% if in_cart %}
+            <a class="btn btn-outline btn-block mt-2" href="{% url 'commerce:cart' %}">{% icon "cart" 16 %} In your cart — view</a>
+          {% else %}
+            <form method="post" action="{% url 'commerce:add_to_cart' course.pk %}" class="mt-2" data-once>{% csrf_token %}
+              <button class="btn btn-outline btn-block" type="submit">{% icon "cart" 16 %} Save to cart</button></form>
+          {% endif %}
+        {% endif %}
+      {% endif %}
+      <ul class="includes">
+        <li>{% icon "video" 16 %} {{ lesson_count }} lesson{{ lesson_count|pluralize }} · {{ course.total_duration_minutes|minutes }}</li>
+        {% if quiz_count %}<li>{% icon "target" 16 %} {{ quiz_count }} quiz{{ quiz_count|pluralize:"zes" }}</li>{% endif %}
+        <li>{% icon "download" 16 %} Downloadable lecture materials</li>
+        <li>{% icon "monitor" 16 %} Progress saved across devices</li>
+        {% if course.certificate_enabled %}<li>{% icon "award" 16 %} Verifiable certificate</li>{% endif %}
+      </ul>
+      {% if user.is_authenticated and not is_owner %}
+        <p class="text-xs center mt-4 mb-0"><a class="muted" href="{% url 'core:report' 'course' course.pk %}?next={{ request.path|urlencode }}">{% icon "flag" 12 %} Report this course</a></p>
+      {% endif %}
+    </aside>
+  </div>
+
+  {% if related %}
+  <section class="section-tight">
+    <div class="section-head"><h2>More in {{ course.category.name }}</h2></div>
+    <div class="course-grid">{% for course in related %}{% include "partials/course_card.html" %}{% endfor %}</div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

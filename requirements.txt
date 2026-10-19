@@ -1,0 +1,4 @@
+Django==6.0.8
+Pillow>=10.1        # ImageField uploads, generated demo thumbnails
+reportlab>=4.0      # certificate PDFs
+qrcode>=7.4         # verification QR code on certificates (optional)

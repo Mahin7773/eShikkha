@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Log in – {{ platform.site_name }}{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <div class="card-body">
+      <h1>Welcome back</h1>
+      <p class="muted">Log in to continue learning.</p>
+      <form method="post" novalidate data-once>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% include "partials/form.html" with single=True %}
+        <button class="btn btn-primary btn-block btn-lg mt-5" type="submit" data-loading="Logging in…">Log in</button>
+      </form>
+      <p class="text-sm mt-4 mb-0 center">New to {{ platform.site_name }}? <a href="{% url 'accounts:register' %}">Create an account</a></p>
+    </div>
+    {% if DEBUG %}
+    <div class="card-footer demo-accounts">
+      <strong>Demo accounts</strong> (after running <code>python manage.py seed_demo</code>): <code>student</code>, <code>instructor</code>, <code>admin</code> — password <code>Demo@12345</code>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

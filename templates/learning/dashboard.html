@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}My learning – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="learn-head">
+    <span class="eyebrow">My learning</span>
+    <h1>Hello, {{ user.first_name|default:user.username }}</h1>
+    <p class="muted mb-0">{% if continue_learning %}Ready to keep going? Your progress is saved on every device.{% else %}Find a course and start learning today.{% endif %}</p>
+  </div>
+
+  {% if continue_learning %}
+    <div class="resume-card">
+      <div class="ring" style="--p: {{ continue_learning.progress_percent }}" aria-label="{{ continue_learning.progress_percent }}% complete"><span>{{ continue_learning.progress_percent }}%</span></div>
+      <div>
+        <span class="eyebrow">Continue where you left off</span>
+        <h2>{{ continue_learning.course.title }}</h2>
+        <p>{% if continue_learning.last_lesson %}{% icon "play" 14 %} {{ continue_learning.last_lesson.title }}{% endif %}{% if continue_learning.last_accessed_at %} · opened {{ continue_learning.last_accessed_at|timesince }} ago{% endif %}</p>
+      </div>
+      <a class="btn btn-light btn-lg" href="{{ continue_learning.get_resume_url }}">{% icon "play" 18 %} Resume</a>
+    </div>
+  {% endif %}
+
+  <div class="stat-pills" aria-label="Learning statistics">
+    <span>{% icon "book" 16 %} <strong>{{ stats.enrolled }}</strong> enrolled</span>
+    <span>{% icon "check-circle" 16 %} <strong>{{ stats.completed }}</strong> completed</span>
+    <span>{% icon "play" 16 %} <strong>{{ stats.lessons_done }}</strong> lessons finished</span>
+    <span>{% icon "target" 16 %} <strong>{{ stats.quizzes_passed }}</strong> quizzes passed</span>
+    <a class="chip" href="{% url 'learning:certificates' %}">{% icon "award" 16 %} <strong>{{ certificates|length }}</strong>&nbsp;certificate{{ certificates|length|pluralize }}</a>
+  </div>
+
+  <nav class="tabs mb-5" aria-label="Learning sections">
+    <a href="?tab=progress" class="{% if tab == 'progress' %}active{% endif %}">In progress ({{ in_progress|length }})</a>
+    <a href="?tab=completed" class="{% if tab == 'completed' %}active{% endif %}">Completed ({{ completed|length }})</a>
+    <a href="?tab=activity" class="{% if tab == 'activity' %}active{% endif %}">Quiz activity</a>
+  </nav>
+
+  {% if tab == 'activity' %}
+    {% if recent_attempts %}
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Quiz</th><th>Course</th><th>Attempt</th><th>Date</th><th class="num">Score</th><th>Result</th><th></th></tr></thead>
+        <tbody>{% for a in recent_attempts %}
+          <tr><td class="strong">{{ a.quiz.title }}</td><td>{{ a.quiz.course.title }}</td><td>#{{ a.attempt_number }}</td><td class="nowrap">{{ a.submitted_at|date:"M j, H:i" }}</td>
+            <td class="num">{{ a.score_percent|floatformat:0 }}%</td>
+            <td>{% if a.passed %}{% badge "Passed" "success" %}{% elif a.status == 'expired' %}{% badge "Expired" "warning" %}{% else %}{% badge "Not passed" "danger" %}{% endif %}</td>
+            <td class="right"><a class="btn btn-ghost btn-sm" href="{% url 'assessments:result' a.quiz.course.slug a.pk %}">Details</a></td></tr>
+        {% endfor %}</tbody>
+      </table></div>
+    {% else %}
+      {% include "partials/empty.html" with icon_name="target" title="No quiz attempts yet" text="Quizzes appear inside your courses alongside the lessons." %}
+    {% endif %}
+  {% else %}
+    {% if tab == 'completed' %}{% with items=completed %}{% include "learning/_enrollment_grid.html" %}{% endwith %}
+    {% else %}{% with items=in_progress %}{% include "learning/_enrollment_grid.html" %}{% endwith %}{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

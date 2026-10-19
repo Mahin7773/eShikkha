@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Notifications – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container container-narrow">
+  <div class="page-header row-between">
+    <div><h1>Notifications</h1><p>Enrolments, reviews, moderation decisions and account updates.</p></div>
+    {% if unread_notifications %}
+      <form method="post" action="{% url 'notifications:read_all' %}">{% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">{% icon "check" 14 %} Mark all as read</button></form>
+    {% endif %}
+  </div>
+  {% if page_obj.object_list %}
+    <div class="card">
+      {% for n in page_obj %}
+        <form method="post" action="{% url 'notifications:open' n.pk %}" style="border-bottom:1px solid var(--line-soft)">
+          {% csrf_token %}
+          <button type="submit" class="row row-top" style="width:100%;text-align:left;background:{% if n.is_read %}#fff{% else %}var(--primary-soft){% endif %};border:0;padding:var(--s4) var(--s5);cursor:pointer;font:inherit;color:inherit">
+            <span style="color:var(--primary);margin-top:2px">{% if n.kind == 'enrollment' %}{% icon "users" 18 %}{% elif n.kind == 'review' %}{% icon "star" 18 %}{% elif n.kind == 'moderation' %}{% icon "shield" 18 %}{% elif n.kind == 'payment' %}{% icon "card" 18 %}{% elif n.kind == 'certificate' %}{% icon "award" 18 %}{% else %}{% icon "bell" 18 %}{% endif %}</span>
+            <span class="grow">
+              <span class="strong" style="display:block">{{ n.title }}</span>
+              {% if n.message %}<span class="text-sm muted" style="display:block">{{ n.message|truncatechars:200 }}</span>{% endif %}
+              <span class="text-xs subtle">{{ n.created_at|timesince }} ago</span>
+            </span>
+            {% if not n.is_read %}<span class="badge badge-primary">New</span>{% endif %}
+          </button>
+        </form>
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    {% include "partials/empty.html" with icon_name="bell" title="You're all caught up" text="We'll let you know about enrolments, reviews and other updates here." %}
+  {% endif %}
+</div>
+{% endblock %}

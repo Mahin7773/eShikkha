@@ -1,0 +1,60 @@
+{% extends "layouts/manage.html" %}
+{% load ui humanize %}
+{% block title %}Admin dashboard – {{ platform.site_name }}{% endblock %}
+{% block manage %}
+<div class="page-header"><h1>Platform overview</h1><p>What needs your attention, and how the platform is doing.</p></div>
+
+<div class="stat-grid mb-5">
+  <div class="stat"><div class="label">{% icon "users" 14 %} Registered users</div><a class="value" href="{% url 'adminpanel:users' %}">{{ stats.users|intcomma }}</a><div class="hint">{{ stats.suspended }} suspended</div></div>
+  <div class="stat"><div class="label">{% icon "book" 14 %} Students</div><div class="value">{{ stats.students|intcomma }}</div><div class="hint">{{ stats.active_students }} active in last 30 days</div></div>
+  <div class="stat"><div class="label">{% icon "monitor" 14 %} Instructors</div><a class="value" href="{% url 'adminpanel:users' %}?role=instructor">{{ stats.instructors|intcomma }}</a></div>
+  <div class="stat"><div class="label">{% icon "layers" 14 %} Published courses</div><a class="value" href="{% url 'adminpanel:courses' %}?status=published">{{ stats.published }}</a></div>
+  <div class="stat"><div class="label">{% icon "clock" 14 %} Pending review</div><a class="value" href="{% url 'adminpanel:courses' %}">{{ stats.pending }}</a></div>
+  <div class="stat"><div class="label">{% icon "check-circle" 14 %} Active enrolments</div><div class="value">{{ stats.enrollments|intcomma }}</div></div>
+  <div class="stat"><div class="label">{% icon "dollar" 14 %} Sales</div><a class="value" href="{% url 'adminpanel:transactions' %}">{{ stats.sales|usd }}</a><div class="hint">{{ stats.orders }} paid order{{ stats.orders|pluralize }}</div></div>
+</div>
+
+<div class="grid grid-3 mb-5">
+  <div class="card">
+    <div class="card-header"><h2>Courses awaiting review</h2><span class="badge badge-info">{{ stats.pending }}</span></div>
+    <div class="card-body">
+      {% for c in queues.courses %}
+        <div class="row" style="padding:6px 0"><div class="grow"><a class="strong text-sm" href="{% url 'adminpanel:course_review' c.pk %}">{{ c.title }}</a><div class="text-xs muted">{{ c.instructor.display_name }} · submitted {{ c.submitted_at|naturaltime }}</div></div></div>
+      {% empty %}<p class="text-sm muted mb-0">{% icon "check" 14 %} Queue is clear.</p>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>Instructor applications</h2><span class="badge badge-info">{{ counts.applications }}</span></div>
+    <div class="card-body">
+      {% for a in queues.applications %}
+        <div style="padding:6px 0"><a class="strong text-sm" href="{% url 'adminpanel:applications' %}">{{ a.user.display_name }}</a><div class="text-xs muted">{{ a.expertise|truncatechars:50 }}</div></div>
+      {% empty %}<p class="text-sm muted mb-0">{% icon "check" 14 %} No pending applications.</p>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>Open reports</h2><span class="badge {% if counts.reports %}badge-danger{% else %}badge-neutral{% endif %}">{{ counts.reports }}</span></div>
+    <div class="card-body">
+      {% for r in queues.reports %}
+        <div style="padding:6px 0"><a class="strong text-sm" href="{% url 'adminpanel:reports' %}">{{ r.get_target_type_display }}: {{ r.target|truncatechars:36 }}</a><div class="text-xs muted">{{ r.get_reason_display }} · {{ r.created_at|naturaltime }}</div></div>
+      {% empty %}<p class="text-sm muted mb-0">{% icon "check" 14 %} Nothing reported.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header"><h2>Recent transactions</h2><a href="{% url 'adminpanel:transactions' %}" class="text-sm">View all</a></div>
+    <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+      <tbody>{% for t in recent_transactions %}
+        <tr><td><a class="mono" href="{% url 'adminpanel:order_detail' t.order.order_number %}">{{ t.transaction_id }}</a><div class="text-xs muted">{{ t.order.student.display_name }} · {{ t.created_at|naturaltime }}</div></td><td>{% badge t.get_status_display t.status_tone %}</td><td class="num">{{ t.amount|usd }}</td></tr>
+      {% empty %}<tr><td class="muted">No transactions yet.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>Recent admin activity</h2><a href="{% url 'adminpanel:audit' %}" class="text-sm">Audit log</a></div>
+    <div class="card-body">
+      <ul class="timeline">{% for log in recent_audit %}<li><div class="text-sm"><span class="strong">{{ log.actor.display_name|default:"System" }}</span> · <span class="mono">{{ log.action }}</span></div><div class="when">{{ log.target_repr|truncatechars:60 }} · {{ log.created_at|naturaltime }}</div></li>{% empty %}<li class="muted text-sm">No activity yet.</li>{% endfor %}</ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

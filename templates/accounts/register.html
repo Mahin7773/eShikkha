@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Sign up – {{ platform.site_name }}{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="card auth-card" style="max-width:560px">
+    <div class="card-body">
+      <h1>Create your account</h1>
+      <p class="muted">Join {{ platform.site_name }} and start learning today.</p>
+      <form method="post" novalidate data-once>
+        {% csrf_token %}
+        {% include "partials/form.html" %}
+        <button class="btn btn-primary btn-block btn-lg mt-5" type="submit" data-loading="Creating account…">Sign up</button>
+      </form>
+      <p class="text-sm mt-4 mb-0 center">Already have an account? <a href="{% url 'accounts:login' %}">Log in</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

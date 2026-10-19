@@ -1,0 +1,12 @@
+{% extends "layouts/studio.html" %}
+{% block title %}{{ title }} – Studio{% endblock %}
+{% block studio %}
+<div class="page-header"><h1>{{ title }}</h1></div>
+<div class="card" style="max-width:640px"><div class="card-body">
+  <form method="post" novalidate data-once>
+    {% csrf_token %}
+    {% include "partials/form.html" with single=True %}
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Save</button><a class="btn btn-ghost" href="{{ cancel_url }}">Cancel</a></div>
+  </form>
+</div></div>
+{% endblock %}

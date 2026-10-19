@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Report {{ target_type }} – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container container-narrow section">
+  <div class="card">
+    <div class="card-body">
+      <h1 class="mb-2" style="font-size:var(--fs-2xl)">Report this {{ target_type }}</h1>
+      <p class="muted">You are reporting: <strong>{{ target|truncatechars:90 }}</strong>. Reports are confidential and reviewed by our moderators.</p>
+      <form method="post" data-once>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% include "partials/form.html" with single=True %}
+        <div class="form-actions">
+          <button class="btn btn-danger" type="submit">Submit report</button>
+          <a class="btn btn-ghost" href="{{ next }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

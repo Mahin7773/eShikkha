@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Certificates – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header"><h1>Your certificates</h1><p>Download your certificates at any time, or share the verification link with employers.</p></div>
+  {% if certificates %}
+    <div class="grid grid-2">
+      {% for cert in certificates %}
+        <article class="card certificate-card">
+          <div class="seal">{% icon "award" 26 %}</div>
+          <div class="grow">
+            <div class="strong">{{ cert.course_title }}</div>
+            <div class="text-xs muted">Issued {{ cert.issued_at|date:"F j, Y" }} · <span class="mono">{{ cert.certificate_number }}</span></div>
+            {% if cert.is_revoked %}<span class="badge badge-danger mt-2">Revoked: {{ cert.revoked_reason }}</span>{% endif %}
+            {% if not cert.is_revoked %}
+            <div class="row mt-2">
+              <a class="btn btn-primary btn-sm" href="{% url 'learning:certificate_pdf' cert.certificate_number %}">{% icon "download" 14 %} Download PDF</a>
+              <a class="btn btn-outline btn-sm" href="{{ cert.get_absolute_url }}">{% icon "shield" 14 %} Verification page</a>
+            </div>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    {% url 'learning:dashboard' as dash %}
+    {% include "partials/empty.html" with icon_name="award" title="No certificates yet" text="Complete every required lesson and quiz in a course to earn a certificate." action_url=dash action_label="Go to my learning" %}
+  {% endif %}
+</div>
+{% endblock %}

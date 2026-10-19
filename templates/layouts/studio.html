@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block footer %}{% endblock %}
+{% block content %}
+<div class="shell">
+  <nav class="shell-nav" aria-label="Instructor studio">
+    <div class="nav-title">Instructor studio</div>
+    {% with url_name=request.resolver_match.url_name %}
+    <a href="{% url 'studio:dashboard' %}" class="{% if url_name == 'dashboard' %}active{% endif %}">{% icon "home" 18 %} Dashboard</a>
+    <a href="{% url 'studio:course_create' %}" class="{% if url_name == 'course_create' %}active{% endif %}">{% icon "plus" 18 %} New course</a>
+    <a href="{% url 'studio:earnings' %}" class="{% if url_name == 'earnings' %}active{% endif %}">{% icon "dollar" 18 %} Earnings</a>
+    <a href="{% url 'notifications:list' %}">{% icon "bell" 18 %} Notifications{% if unread_notifications %}<span class="count">{{ unread_notifications }}</span>{% endif %}</a>
+    {% if course %}
+      <div class="nav-title" style="margin-top:var(--s4)">Course</div>
+      <div class="course-switch">
+        <div class="title">{{ course.title|truncatechars:60 }}</div>
+        <div class="mt-2">{% badge course.get_status_display course.status_tone %}</div>
+      </div>
+      <a href="{% url 'studio:course' course.pk %}" class="{% if tab == 'overview' %}active{% endif %}">{% icon "grid" 18 %} Overview &amp; status</a>
+      <a href="{% url 'studio:course_edit' course.pk %}" class="{% if tab == 'details' %}active{% endif %}">{% icon "edit" 18 %} Details &amp; pricing</a>
+      <a href="{% url 'studio:curriculum' course.pk %}" class="{% if tab == 'curriculum' %}active{% endif %}">{% icon "layers" 18 %} Curriculum</a>
+      <a href="{% url 'studio:quizzes' course.pk %}" class="{% if tab == 'quizzes' %}active{% endif %}">{% icon "target" 18 %} Quizzes</a>
+      <a href="{% url 'studio:students' course.pk %}" class="{% if tab == 'students' %}active{% endif %}">{% icon "users" 18 %} Students</a>
+      <a href="{% url 'studio:analytics' course.pk %}" class="{% if tab == 'analytics' %}active{% endif %}">{% icon "chart" 18 %} Performance</a>
+      <a href="{% url 'studio:reviews' course.pk %}" class="{% if tab == 'reviews' %}active{% endif %}">{% icon "star" 18 %} Reviews</a>
+      <a href="{% url 'learning:resume' course.slug %}">{% icon "eye" 18 %} Preview as student</a>
+    {% endif %}
+    {% endwith %}
+  </nav>
+  <div class="shell-main">
+    {% block studio %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

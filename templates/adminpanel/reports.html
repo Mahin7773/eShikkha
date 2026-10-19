@@ -1,0 +1,39 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}Reports – Admin{% endblock %}
+{% block manage %}
+<div class="page-header"><h1>Reported content</h1><p>Reports from users about courses, reviews and accounts. Take action from the linked item, then resolve or dismiss the report.</p></div>
+<div class="row-between mb-5">
+  <div class="row">{% for v, l in statuses %}<a class="chip {% if status == v %}active{% endif %}" href="?status={{ v }}{% if target %}&target={{ target }}{% endif %}">{{ l }}</a>{% endfor %}</div>
+  <div class="row">{% for v, l in targets %}<a class="chip {% if target == v %}active{% endif %}" href="?status={{ status }}&target={{ v }}">{{ l }}s</a>{% endfor %}{% if target %}<a class="btn btn-ghost btn-sm" href="?status={{ status }}">Clear</a>{% endif %}</div>
+</div>
+<div class="stack">
+{% for r in page_obj %}
+  <div class="card"><div class="card-body">
+    <div class="row-between">
+      <div><span class="badge badge-neutral">{{ r.get_target_type_display }}</span> <span class="strong">{{ r.get_reason_display }}</span>
+        <div class="text-xs muted mt-2">Reported by {{ r.reporter.display_name }} · {{ r.created_at|date:"M j, Y H:i" }}</div></div>
+      {% if r.status == 'open' %}{% badge "Open" "danger" %}{% elif r.status == 'resolved' %}{% badge "Resolved" "success" %}{% else %}{% badge "Dismissed" "neutral" %}{% endif %}
+    </div>
+    <div class="box mt-4 text-sm">
+      {% if r.target_type == 'course' %}Course: <a href="{% url 'adminpanel:course_review' r.course.pk %}">{{ r.course.title }}</a> — unpublish or archive it from the moderation view.
+      {% elif r.target_type == 'review' %}Review on <a href="{{ r.review.course.get_absolute_url }}#reviews">{{ r.review.course.title }}</a>: “{{ r.review.comment|truncatechars:160 }}” — <a href="{% url 'adminpanel:reviews' %}?view=reported">hide it from the reviews page</a>.
+      {% else %}User: <a href="{% url 'adminpanel:user_detail' r.reported_user.pk %}">{{ r.reported_user.display_name }}</a> — suspend from the user page if needed.{% endif %}
+      {% if r.details %}<p class="mt-2 mb-0 muted">“{{ r.details }}”</p>{% endif %}
+    </div>
+    {% if r.status == 'open' %}
+      <form method="post" action="{% url 'adminpanel:report_resolve' r.pk %}" class="mt-4">
+        {% csrf_token %}
+        <div class="field"><label for="note-{{ r.pk }}">Resolution note (sent to the reporter)</label><input id="note-{{ r.pk }}" type="text" name="note" maxlength="500"></div>
+        <div class="row mt-2"><button class="btn btn-primary btn-sm" name="decision" value="resolved" type="submit">{% icon "check" 14 %} Mark resolved</button><button class="btn btn-outline btn-sm" name="decision" value="dismissed" type="submit">Dismiss</button></div>
+      </form>
+    {% else %}
+      <p class="text-xs muted mt-4 mb-0">{{ r.get_status_display }} by {{ r.resolved_by.display_name }} on {{ r.resolved_at|date:"M j, Y" }}{% if r.resolution_note %}: {{ r.resolution_note }}{% endif %}</p>
+    {% endif %}
+  </div></div>
+{% empty %}
+  {% include "partials/empty.html" with icon_name="flag" title="No reports" text="Nothing matches these filters." %}
+{% endfor %}
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

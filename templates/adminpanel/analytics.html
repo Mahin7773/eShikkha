@@ -1,0 +1,60 @@
+{% extends "layouts/manage.html" %}
+{% load ui humanize %}
+{% block title %}Analytics – Admin{% endblock %}
+{% block manage %}
+<div class="page-header"><h1>Platform analytics</h1><p>Sales, enrolments and engagement over the last 12 months.</p></div>
+
+<div class="stat-grid mb-5">
+  <div class="stat"><div class="label">Gross sales</div><div class="value">{{ earnings.gross|default:0|usd }}</div></div>
+  <div class="stat"><div class="label">Platform fees</div><div class="value">{{ earnings.fee|default:0|usd }}</div></div>
+  <div class="stat"><div class="label">Instructor share</div><div class="value">{{ earnings.net|default:0|usd }}</div></div>
+  <div class="stat"><div class="label">Course completion</div><div class="value">{% if completion.total %}{% widthratio completion.done completion.total 100 %}%{% else %}—{% endif %}</div><div class="hint">{{ completion.done }} of {{ completion.total }} enrolments</div></div>
+</div>
+
+<div class="grid grid-2 mb-5">
+  <div class="card">
+    <div class="card-header"><h2>Monthly revenue</h2></div>
+    <div class="card-body">
+      {% if monthly %}
+        <div class="bar-chart" role="img" aria-label="Monthly revenue">{% for m in monthly %}<div class="bar" title="{{ m.month|date:'M Y' }}: {{ m.revenue|usd }}, {{ m.orders }} orders"><small>{{ m.revenue|floatformat:0 }}</small><span style="height:{{ m.bar }}%"></span><small>{{ m.month|date:"M" }}</small></div>{% endfor %}</div>
+      {% else %}<p class="muted mb-0">No paid orders yet.</p>{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>Monthly breakdown</h2></div>
+    <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+      <thead><tr><th>Month</th><th class="num">Orders</th><th class="num">Enrolments</th><th class="num">Revenue</th></tr></thead>
+      <tbody>{% for m in monthly reversed %}<tr><td>{{ m.month|date:"F Y" }}</td><td class="num">{{ m.orders }}</td><td class="num">{{ m.enrollments }}</td><td class="num">{{ m.revenue|usd }}</td></tr>{% empty %}<tr><td colspan="4" class="muted">No data.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="grid grid-2 mb-5">
+  <div class="card">
+    <div class="card-header"><h2>Enrolments by category</h2></div>
+    <div class="card-body">
+      {% for c in categories %}<div class="hbar"><span class="text-sm">{{ c.name }}</span><div class="track"><span style="width:{% widthratio c.enrollments_n cat_peak 100 %}%"></span></div><span class="text-sm right">{{ c.enrollments_n }}</span></div>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>Users &amp; transactions</h2></div>
+    <div class="card-body">
+      <div class="summary-lines">
+        <div><span>Students</span><span>{{ role_counts.student|default:0 }}</span></div>
+        <div><span>Instructors</span><span>{{ role_counts.instructor|default:0 }}</span></div>
+        <div><span>Administrators</span><span>{{ role_counts.admin|default:0 }}</span></div>
+      </div>
+      <hr>
+      <div class="summary-lines">{% for label, n in txn_status %}<div><span>{{ label }} transactions</span><span>{{ n }}</span></div>{% endfor %}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2>Top courses by enrolment</h2></div>
+  <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+    <thead><tr><th>Course</th><th>Instructor</th><th class="num">Students</th><th>Rating</th><th class="num">Price</th></tr></thead>
+    <tbody>{% for c in top_courses %}<tr><td><a href="{% url 'adminpanel:course_review' c.pk %}">{{ c.title }}</a></td><td>{{ c.instructor.display_name }}</td><td class="num">{{ c.students_count }}</td><td>{% if c.rating_count %}{% stars c.rating_avg c.rating_count %}{% else %}—{% endif %}</td><td class="num">{{ c.current_price|money }}</td></tr>{% empty %}<tr><td class="muted">No published courses.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

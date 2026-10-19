@@ -1,0 +1,82 @@
+{% load ui %}
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a class="brand" href="{% url 'core:home' %}" aria-label="{{ platform.site_name }} home">
+      {% include "partials/logo_mark.html" %}{{ platform.site_name }}
+    </a>
+
+    <nav class="primary-nav" aria-label="Main">
+      <details class="dropdown">
+        <summary class="nav-link">Explore {% icon "chevron-down" 14 %}</summary>
+        <div class="dropdown-menu mega" role="menu">
+          <div class="mega-head"><span class="strong text-sm">Browse by topic</span><a class="text-sm" href="{% url 'courses:list' %}">All courses {% icon "arrow-right" 12 %}</a></div>
+          {% for cat in nav_categories %}
+            <a href="{% url 'courses:list' %}?category={{ cat.slug }}" role="menuitem"><span class="mega-icon" style="--h: {{ cat.pk|hue }}">{{ cat.name|initials }}</span>{{ cat.name }}</a>
+          {% endfor %}
+        </div>
+      </details>
+      <a class="nav-link" href="{% url 'courses:list' %}?price=free">Free courses</a>
+      {% if not user.is_authenticated or user.is_student %}<a class="nav-link" href="{% url 'accounts:apply_instructor' %}">Teach</a>{% endif %}
+    </nav>
+
+    <nav class="nav-links" aria-label="Account">
+      <form class="nav-search" id="nav-search" role="search" action="{% url 'courses:list' %}" method="get">
+        {% icon "search" 16 %}
+        <label class="sr-only" for="nav-q">Search courses</label>
+        <input id="nav-q" type="search" name="q" placeholder="Search courses" value="{{ request.GET.q|default:'' }}">
+      </form>
+      <button class="nav-link nav-toggle btn-ghost" type="button" data-toggle="#nav-search" aria-expanded="false" aria-controls="nav-search" style="border:0">
+        {% icon "search" 18 %}<span class="sr-only">Search</span>
+      </button>
+
+      {% if not user.is_authenticated %}
+        <a class="btn btn-ghost btn-sm" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}">Log in</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'accounts:register' %}">Join free</a>
+      {% else %}
+        {% if user.is_platform_admin %}
+          <a class="nav-link hide-sm {% if request.resolver_match.app_name == 'adminpanel' %}active{% endif %}" href="{% url 'adminpanel:dashboard' %}">{% icon "shield" 16 %} Admin panel</a>
+        {% elif user.is_instructor %}
+          <a class="nav-link hide-sm {% if request.resolver_match.app_name == 'studio' %}active{% endif %}" href="{% url 'studio:dashboard' %}">{% icon "layers" 16 %} Instructor studio</a>
+        {% else %}
+          <a class="nav-link hide-sm {% if request.resolver_match.app_name == 'learning' %}active{% endif %}" href="{% url 'learning:dashboard' %}">My learning</a>
+          <a class="nav-link" href="{% url 'commerce:cart' %}" aria-label="Cart, {{ cart_count|default:0 }} item{{ cart_count|pluralize }}">
+            {% icon "cart" 20 %}{% if cart_count %}<span class="count-dot">{{ cart_count }}</span>{% endif %}
+          </a>
+        {% endif %}
+        <a class="nav-link" href="{% url 'notifications:list' %}" aria-label="Notifications, {{ unread_notifications|default:0 }} unread">
+          {% icon "bell" 20 %}{% if unread_notifications %}<span class="count-dot">{{ unread_notifications }}</span>{% endif %}
+        </a>
+        <details class="dropdown">
+          <summary aria-label="Account menu">
+            <span class="avatar">{% if user.avatar %}<img src="{{ user.avatar.url }}" alt="">{% else %}{{ user.initials }}{% endif %}</span>
+          </summary>
+          <div class="dropdown-menu align-right" role="menu">
+            <div class="dropdown-header">
+              <div class="strong">{{ user.display_name }}</div>
+              <div class="text-xs muted">{{ user.email }} · {{ user.get_role_display }}</div>
+            </div>
+            {% if user.is_student %}
+              <a href="{% url 'learning:dashboard' %}" role="menuitem">{% icon "book" 16 %} My learning</a>
+              <a href="{% url 'learning:certificates' %}" role="menuitem">{% icon "award" 16 %} Certificates</a>
+              <a href="{% url 'commerce:orders' %}" role="menuitem">{% icon "card" 16 %} Purchase history</a>
+              <a href="{% url 'accounts:apply_instructor' %}" role="menuitem">{% icon "monitor" 16 %} Teach on {{ platform.site_name }}</a>
+            {% elif user.is_instructor %}
+              <a href="{% url 'studio:dashboard' %}" role="menuitem">{% icon "layers" 16 %} Instructor studio</a>
+              <a href="{% url 'studio:earnings' %}" role="menuitem">{% icon "dollar" 16 %} Earnings</a>
+              <a href="{% url 'courses:instructor' user.username %}" role="menuitem">{% icon "user" 16 %} Public profile</a>
+            {% elif user.is_platform_admin %}
+              <a href="{% url 'adminpanel:dashboard' %}" role="menuitem">{% icon "shield" 16 %} Admin panel</a>
+            {% endif %}
+            <div class="dropdown-sep"></div>
+            <a href="{% url 'accounts:profile' %}" role="menuitem">{% icon "edit" 16 %} Edit profile</a>
+            <a href="{% url 'accounts:password_change' %}" role="menuitem">{% icon "lock" 16 %} Change password</a>
+            <div class="dropdown-sep"></div>
+            <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+              <button type="submit" role="menuitem">{% icon "log-out" 16 %} Log out</button>
+            </form>
+          </div>
+        </details>
+      {% endif %}
+    </nav>
+  </div>
+</header>

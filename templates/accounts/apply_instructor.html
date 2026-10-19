@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Teach on {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container container-narrow">
+  <div class="page-header">
+    <h1>Teach on {{ platform.site_name }}</h1>
+    <p>Share your expertise with learners around the world. {% if requires_approval %}Applications are reviewed by our team, usually within a few days.{% else %}Your account is upgraded as soon as you apply.{% endif %}</p>
+  </div>
+
+  {% if not user.is_authenticated %}
+    <div class="alert alert-info">{% icon "info" 18 %}<div><a href="{% url 'accounts:register' %}">Create an account</a> or <a href="{% url 'accounts:login' %}?next={{ request.path }}">log in</a> to apply.</div></div>
+  {% elif user.is_instructor %}
+    <div class="alert alert-success">{% icon "check-circle" 18 %}<div>You're already an instructor. <a href="{% url 'studio:dashboard' %}">Open the instructor studio</a>.</div></div>
+  {% elif user.is_platform_admin %}
+    <div class="alert alert-info">{% icon "info" 18 %}<div>Administrators manage instructor applications from the <a href="{% url 'adminpanel:applications' %}">admin panel</a>.</div></div>
+  {% else %}
+    {% if user.pending_application %}
+      <div class="alert alert-info mb-5">{% icon "clock" 18 %}<div><strong>Your application is under review.</strong> We'll send you a notification once it has been reviewed.</div></div>
+    {% endif %}
+
+    {% if can_apply %}
+      <div class="card"><div class="card-body">
+        <h2 style="font-size:var(--fs-xl)">Instructor application</h2>
+        <form method="post" novalidate data-once>
+          {% csrf_token %}
+          {% include "partials/form.html" %}
+          <div class="form-actions"><button class="btn btn-primary" type="submit">Submit application</button></div>
+        </form>
+      </div></div>
+    {% endif %}
+
+    {% if applications %}
+      <h2 class="mt-6" style="font-size:var(--fs-lg)">Your applications</h2>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Submitted</th><th>Expertise</th><th>Status</th><th>Reviewer note</th></tr></thead>
+        <tbody>{% for a in applications %}
+          <tr><td class="nowrap">{{ a.created_at|date:"M j, Y" }}</td><td>{{ a.expertise }}</td>
+            <td>{% if a.status == 'approved' %}{% badge a.get_status_display 'success' %}{% elif a.status == 'rejected' %}{% badge a.get_status_display 'danger' %}{% else %}{% badge a.get_status_display 'info' %}{% endif %}</td>
+            <td>{{ a.review_note|default:"—" }}</td></tr>
+        {% endfor %}</tbody>
+      </table></div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

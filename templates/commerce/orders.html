@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Purchase history – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header"><h1>Purchase history</h1><p>Your orders and payments.</p></div>
+  {% if page_obj.object_list %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Order</th><th>Courses</th><th>Date</th><th>Status</th><th class="num">Total</th><th></th></tr></thead>
+      <tbody>
+      {% for order in page_obj %}
+        <tr>
+          <td class="mono">{{ order.order_number }}</td>
+          <td>{% for item in order.items.all %}<div class="text-sm">{{ item.course.title }}</div>{% endfor %}</td>
+          <td class="nowrap">{{ order.created_at|date:"M j, Y" }}</td>
+          <td>{% badge order.get_status_display order.status_tone %}</td>
+          <td class="num">{{ order.total|usd }}</td>
+          <td class="right"><a class="btn btn-outline btn-sm" href="{{ order.get_absolute_url }}">{% if order.is_payable %}Complete payment{% else %}View{% endif %}</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    {% url 'courses:list' as browse %}
+    {% include "partials/empty.html" with icon_name="card" title="No purchases yet" text="Courses you buy will appear here with their receipts." action_url=browse action_label="Browse courses" %}
+  {% endif %}
+</div>
+{% endblock %}

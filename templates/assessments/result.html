@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Result: {{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="container container-narrow">
+  <div class="page-header">
+    <nav class="breadcrumbs text-sm"><a href="{% url 'assessments:quiz' course.slug quiz.pk %}">{% icon "chevron-left" 14 %} {{ quiz.title }}</a></nav>
+    <h1>Attempt {{ attempt.attempt_number }} result</h1>
+    <p>{% if not is_owner %}{{ attempt.student.display_name }} · {% endif %}Submitted {{ attempt.submitted_at|date:"M j, Y H:i" }}{% if attempt.submitted_at %} · {{ attempt.started_at|timesince:attempt.submitted_at }} taken{% endif %}</p>
+  </div>
+
+  <div class="card mb-5"><div class="card-body row" style="gap:var(--s6)">
+    <div class="score-ring" style="--score: {{ attempt.score_percent|floatformat:0 }}; --ring: {% if attempt.passed %}var(--success){% else %}var(--danger){% endif %}"><div>{{ attempt.score_percent|floatformat:0 }}%</div></div>
+    <div class="grow">
+      {% if attempt.status == 'expired' %}<h2 style="color:var(--warning)">Time expired</h2><p class="muted">The attempt was not submitted before the time limit and was scored as unanswered.</p>
+      {% elif attempt.passed %}<h2 style="color:var(--success)">Passed</h2><p class="muted">Great work — you met the {{ quiz.passing_score }}% pass mark.</p>
+      {% else %}<h2 style="color:var(--danger)">Not passed</h2><p class="muted">You need {{ quiz.passing_score }}% to pass.</p>{% endif %}
+      <p class="text-sm mb-0">{{ attempt.points_earned }} of {{ attempt.points_possible }} points ·
+        {% if attempts_remaining is None %}unlimited attempts{% else %}{{ attempts_remaining }} attempt{{ attempts_remaining|pluralize }} remaining{% endif %}</p>
+      <div class="row mt-4">
+        {% if is_owner %}<a class="btn btn-primary" href="{% url 'learning:resume' course.slug %}">Continue course</a>
+        <a class="btn btn-outline" href="{% url 'assessments:quiz' course.slug quiz.pk %}">Quiz overview</a>{% endif %}
+      </div>
+    </div>
+  </div></div>
+
+  {% if not reveal %}
+    <div class="alert alert-info mb-5">{% icon "lock" 18 %}<div>{% if quiz.result_visibility == 'score' %}The instructor has chosen not to reveal correct answers for this quiz.{% else %}Correct answers will be shown once you pass or use all your attempts.{% endif %} You can still see which questions you got right.</div></div>
+  {% endif %}
+
+  <div class="stack">
+    {% for row in rows %}
+      <fieldset class="question" disabled>
+        <legend><span class="qnum">Question {{ forloop.counter }} · {{ row.points }}/{{ row.question.points }} point{{ row.question.points|pluralize }}
+          {% if row.is_correct %}<span class="badge badge-success">Correct</span>{% else %}<span class="badge badge-danger">Incorrect</span>{% endif %}</span>{{ row.question.text|linebreaksbr }}</legend>
+        {% for option in row.question.options.all %}
+          <div class="option {% if reveal and option.is_correct %}correct{% elif option.pk in row.selected and not row.is_correct %}incorrect{% endif %}">
+            <input type="{% if row.question.is_multi_select %}checkbox{% else %}radio{% endif %}" {% if option.pk in row.selected %}checked{% endif %} disabled aria-label="{% if option.pk in row.selected %}Your answer{% else %}Not selected{% endif %}">
+            <span>{{ option.text }}</span>
+            <span class="tag-right">{% if option.pk in row.selected %}<span class="badge badge-neutral">Your answer</span>{% endif %}{% if reveal and option.is_correct %} <span class="badge badge-success">Correct answer</span>{% endif %}</span>
+          </div>
+        {% endfor %}
+        {% if show_explanations and row.question.explanation %}<div class="alert alert-info mt-4">{% icon "help" 16 %}<div><strong>Explanation:</strong> {{ row.question.explanation }}</div></div>{% endif %}
+      </fieldset>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

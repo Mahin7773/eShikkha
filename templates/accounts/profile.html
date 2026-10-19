@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Edit profile – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container container-narrow">
+  <div class="page-header row">
+    <span class="avatar avatar-lg">{% if user.avatar %}<img src="{{ user.avatar.url }}" alt="">{% else %}{{ user.initials }}{% endif %}</span>
+    <div>
+      <h1>Your profile</h1>
+      <p>{{ user.get_role_display }} · member since {{ user.date_joined|date:"F Y" }}</p>
+    </div>
+  </div>
+  <div class="tabs mb-5"><a class="active" href="{% url 'accounts:profile' %}">Profile</a><a href="{% url 'accounts:password_change' %}">Password</a>{% if user.is_instructor %}<a href="{% url 'courses:instructor' user.username %}">View public profile</a>{% endif %}</div>
+  <form method="post" enctype="multipart/form-data" novalidate data-once>
+    {% csrf_token %}
+    {% include "partials/form.html" %}
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Save profile</button></div>
+  </form>
+</div>
+{% endblock %}

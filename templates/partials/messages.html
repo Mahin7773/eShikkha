@@ -1,0 +1,11 @@
+{% load ui %}{% if messages %}
+<div class="toasts" role="status" aria-live="polite">
+  {% for message in messages %}
+    <div class="toast toast-{{ message.tags|default:'info' }}">
+      {% if message.tags == 'success' %}{% icon "check-circle" 18 %}{% elif message.tags == 'error' %}{% icon "alert" 18 %}{% elif message.tags == 'warning' %}{% icon "alert" 18 %}{% else %}{% icon "info" 18 %}{% endif %}
+      <div>{{ message }}</div>
+      <button type="button" aria-label="Dismiss">{% icon "x" 16 %}</button>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

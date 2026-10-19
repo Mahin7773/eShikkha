@@ -1,0 +1,38 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}Settings – Admin{% endblock %}
+{% block manage %}
+<div class="page-header"><h1>Platform settings</h1><p>Policies, pricing rules and the certificate template. Changes are recorded in the audit log.</p></div>
+<form method="post" novalidate data-once style="max-width:900px">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-error mb-4">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+  <fieldset class="fieldset"><legend>Branding</legend><div class="form-grid">
+    {% include "partials/field.html" with field=form.site_name %}
+    {% include "partials/field.html" with field=form.support_email %}
+    {% include "partials/field.html" with field=form.tagline span=True %}
+  </div></fieldset>
+  <fieldset class="fieldset"><legend>Moderation policies</legend><div class="stack">
+    {% include "partials/field.html" with field=form.require_instructor_approval %}
+    {% include "partials/field.html" with field=form.require_course_approval %}
+    {% include "partials/field.html" with field=form.reapprove_published_edits %}
+  </div></fieldset>
+  <fieldset class="fieldset"><legend>Course policies</legend><div class="form-grid">
+    {% include "partials/field.html" with field=form.max_course_price %}
+    {% include "partials/field.html" with field=form.platform_fee_percent %}
+    {% include "partials/field.html" with field=form.review_min_progress %}
+    <div></div>
+    {% include "partials/field.html" with field=form.allow_discounts span=True %}
+  </div></fieldset>
+  <fieldset class="fieldset"><legend>Certificate template</legend>
+    <p class="legend-help">Applied to every certificate PDF, including previously issued ones when they are downloaded again.</p>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.certificate_title %}
+      {% include "partials/field.html" with field=form.certificate_accent_color %}
+      {% include "partials/field.html" with field=form.certificate_signatory_name %}
+      {% include "partials/field.html" with field=form.certificate_signatory_title %}
+      {% include "partials/field.html" with field=form.certificate_show_qr span=True %}
+    </div>
+  </fieldset>
+  <div class="form-actions"><button class="btn btn-primary btn-lg" type="submit">Save settings</button></div>
+</form>
+{% endblock %}

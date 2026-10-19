@@ -1,0 +1,1 @@
+{% load ui %}<div class="thumb">{% if course.thumbnail %}<img src="{{ course.thumbnail.url }}" alt="" loading="lazy">{% else %}<div class="thumb-placeholder" style="--h: {{ course.category_id|hue }}"><span>{{ course.title|initials }}</span></div>{% endif %}</div>

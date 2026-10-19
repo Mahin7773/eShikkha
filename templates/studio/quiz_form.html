@@ -1,0 +1,33 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}{% if quiz %}Quiz settings{% else %}New quiz{% endif %} – {{ course.title }}{% endblock %}
+{% block studio %}
+<div class="page-header">
+  <nav class="breadcrumbs text-sm"><a href="{% url 'studio:quizzes' course.pk %}">{% icon "chevron-left" 14 %} Quizzes</a></nav>
+  <h1>{% if quiz %}Settings: {{ quiz.title }}{% else %}Create a quiz{% endif %}</h1>
+</div>
+<div class="card" style="max-width:820px"><div class="card-body">
+  <form method="post" novalidate data-once>
+    {% csrf_token %}
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.title span=True %}
+      {% include "partials/field.html" with field=form.description %}
+      {% include "partials/field.html" with field=form.lesson span=True %}
+      {% include "partials/field.html" with field=form.passing_score %}
+      {% include "partials/field.html" with field=form.time_limit_minutes %}
+      {% include "partials/field.html" with field=form.max_attempts %}
+      {% include "partials/field.html" with field=form.result_visibility %}
+    </div>
+    <div class="stack mt-5">
+      {% include "partials/field.html" with field=form.shuffle_questions %}
+      {% include "partials/field.html" with field=form.show_explanations %}
+      {% include "partials/field.html" with field=form.is_required %}
+      {% include "partials/field.html" with field=form.is_published %}
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">{% if quiz %}Save settings{% else %}Create quiz &amp; add questions{% endif %}</button>
+      <a class="btn btn-ghost" href="{% if quiz %}{% url 'studio:quiz_questions' course.pk quiz.pk %}{% else %}{% url 'studio:quizzes' course.pk %}{% endif %}">Cancel</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

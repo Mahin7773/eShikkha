@@ -1,0 +1,56 @@
+{% load static ui %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ platform.site_name }} – {{ platform.tagline }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{{ platform.tagline }}{% endblock %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/logo-mark.svg' %}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  {% if announcement %}
+    <div class="announcement" role="region" aria-label="Announcement">
+      <div class="container">
+        {% icon "info" 16 %}
+        <div class="grow"><strong>{{ announcement.title }}</strong> — {{ announcement.body|truncatechars:180 }}</div>
+        <form method="post" action="{% url 'core:dismiss_announcement' announcement.pk %}">
+          {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" aria-label="Dismiss announcement">{% icon "x" 16 %}</button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  {% include "partials/navbar.html" %}
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}{% include "partials/footer.html" %}{% endblock %}
+
+  {% include "partials/messages.html" %}
+
+  <dialog class="modal" id="confirm-dialog" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <div class="modal-body">
+        <h2 id="confirm-title" data-confirm-title>Are you sure?</h2>
+        <p class="muted mb-0" data-confirm-message></p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" value="cancel">Cancel</button>
+        <button class="btn btn-danger" value="ok" data-confirm-ok>Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="{% static 'js/app.js' %}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

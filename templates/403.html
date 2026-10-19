@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Access denied{% endblock %}
+{% block content %}
+<div class="container container-narrow section">
+  {% url 'core:home' as home %}
+  {% include "partials/empty.html" with icon_name="lock" title="You don't have access to this page" text="This area is restricted to a different role, or you need to enrol in the course first." action_url=home action_label="Go to home page" %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Shopping cart – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header"><h1>Shopping cart</h1><p>{{ courses|length }} course{{ courses|length|pluralize }} in cart</p></div>
+  {% if courses %}
+  <div class="split">
+    <div class="card">
+      {% for course in courses %}
+        <div class="row" style="padding:var(--s4) var(--s5);border-bottom:1px solid var(--line-soft);align-items:flex-start">
+          <a href="{{ course.get_absolute_url }}" style="width:140px;flex-shrink:0">{% include "partials/thumb.html" %}</a>
+          <div class="grow">
+            <a class="strong" href="{{ course.get_absolute_url }}" style="color:var(--ink)">{{ course.title }}</a>
+            <div class="text-xs muted">By {{ course.instructor.display_name }} · {{ course.get_level_display }}</div>
+            {% if not course.is_published %}<div class="text-xs mt-2" style="color:var(--danger)">No longer available — remove it to continue.</div>{% endif %}
+            <form method="post" action="{% url 'commerce:remove_from_cart' course.pk %}" class="mt-2">{% csrf_token %}<button class="btn-link text-sm" type="submit">Remove</button></form>
+          </div>
+          <div class="right">
+            <div class="price">{{ course.current_price|money }}</div>
+            {% if course.has_active_discount %}<div class="price-old" style="margin:0">{{ course.price|money }}</div>{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <aside class="card"><div class="card-body">
+      <div class="summary-lines">
+        <div><span>Original price</span><span>{{ summary.subtotal|usd }}</span></div>
+        {% if summary.discount %}<div><span>Discounts</span><span style="color:var(--success)">−{{ summary.discount|usd }}</span></div>{% endif %}
+        <div class="total"><span>Total</span><span>{{ summary.total|usd }}</span></div>
+      </div>
+      <form method="post" action="{% url 'commerce:checkout' %}" class="mt-5" data-once>{% csrf_token %}
+        <button class="btn btn-primary btn-block btn-lg" type="submit" data-loading="Creating order…">Checkout {% icon "arrow-right" 16 %}</button>
+      </form>
+      <p class="text-xs muted mt-4 mb-0">Prices are confirmed when your order is created.</p>
+    </div></aside>
+  </div>
+  {% else %}
+    {% url 'courses:list' as browse %}
+    {% include "partials/empty.html" with icon_name="cart" title="Your cart is empty" text="Keep browsing to find a course you'll love." action_url=browse action_label="Browse courses" %}
+  {% endif %}
+</div>
+{% endblock %}

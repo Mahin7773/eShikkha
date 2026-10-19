@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Verify a certificate – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container container-narrow section">
+  <h1>Certificate verification</h1>
+  <p class="muted">Enter the certificate ID printed at the bottom of an {{ platform.site_name }} certificate.</p>
+  <form method="get" action="{% url 'learning:verify' %}" class="row mb-5">
+    <label class="sr-only" for="cert-id">Certificate ID</label>
+    <input id="cert-id" class="input grow mono" name="id" value="{{ number }}" placeholder="ESK-XXXX-XXXX-XXXX" style="max-width:360px">
+    <button class="btn btn-primary" type="submit">{% icon "search" 16 %} Verify</button>
+  </form>
+
+  {% if searched %}
+    {% if certificate and not certificate.is_revoked %}
+      <div class="card verify-card"><div class="card-body">
+        <div class="alert alert-success mb-5">{% icon "check-circle" 18 %}<div><strong>Valid certificate.</strong> This certificate was issued by {{ platform.site_name }}.</div></div>
+        <div class="cert-preview">
+          <div class="text-sm muted">{{ platform.certificate_title }}</div>
+          <div class="name">{{ certificate.student_name }}</div>
+          <div class="muted">completed</div>
+          <div class="strong" style="font-size:var(--fs-lg)">{{ certificate.course_title }}</div>
+          <div class="text-sm muted mt-2">Instructor: {{ certificate.instructor_name }}</div>
+        </div>
+        <dl class="summary-lines mt-5">
+          <div><dt class="muted">Certificate ID</dt><dd class="mono" style="margin:0">{{ certificate.certificate_number }}</dd></div>
+          <div><dt class="muted">Issued</dt><dd style="margin:0">{{ certificate.issued_at|date:"F j, Y" }}</dd></div>
+        </dl>
+      </div></div>
+    {% elif certificate %}
+      <div class="alert alert-error">{% icon "alert" 18 %}<div><strong>This certificate has been revoked.</strong> {{ certificate.revoked_reason }}</div></div>
+    {% else %}
+      <div class="alert alert-error">{% icon "alert" 18 %}<div><strong>No certificate found</strong> with ID <span class="mono">{{ number }}</span>. Check the ID and try again.</div></div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

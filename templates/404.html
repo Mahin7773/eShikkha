@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block content %}
+<div class="container container-narrow section">
+  {% url 'courses:list' as browse %}
+  {% include "partials/empty.html" with icon_name="search" title="We couldn't find that page" text="The link may be broken, or the course may no longer be available." action_url=browse action_label="Browse courses" %}
+</div>
+{% endblock %}

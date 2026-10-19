@@ -1,0 +1,36 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}Performance – {{ course.title }}{% endblock %}
+{% block studio %}
+<div class="page-header"><h1>Course performance</h1><p>Completion and quiz performance for this course.</p></div>
+<div class="stat-grid mb-5">
+  <div class="stat"><div class="label">Students</div><div class="value">{{ stats.students }}</div></div>
+  <div class="stat"><div class="label">Completion rate</div><div class="value">{{ stats.completion_rate }}%</div></div>
+  <div class="stat"><div class="label">Avg. progress</div><div class="value">{{ stats.avg_progress }}%</div></div>
+  <div class="stat"><div class="label">Avg. rating</div><div class="value">{{ stats.rating|floatformat:1 }}</div></div>
+</div>
+
+{% for qs in quiz_stats %}
+  <div class="card mb-5">
+    <div class="card-header"><h2>{{ qs.quiz.title }}</h2><span class="text-sm muted">{{ qs.attempts }} attempt{{ qs.attempts|pluralize }} · {{ qs.students }} student{{ qs.students|pluralize }}</span></div>
+    <div class="card-body">
+      <div class="stat-grid mb-4">
+        <div class="stat"><div class="label">Average score</div><div class="value">{% if qs.avg is not None %}{{ qs.avg|floatformat:0 }}%{% else %}—{% endif %}</div></div>
+        <div class="stat"><div class="label">Pass rate</div><div class="value">{% if qs.pass_rate is not None %}{{ qs.pass_rate }}%{% else %}—{% endif %}</div><div class="hint">pass mark {{ qs.quiz.passing_score }}%</div></div>
+      </div>
+      {% if qs.questions %}
+        <h3 style="font-size:var(--fs-sm)" class="muted">Correct answers per question</h3>
+        {% for row in qs.questions %}
+          <div class="hbar"><span class="text-sm" title="{{ row.question.text }}">Q{{ forloop.counter }}. {{ row.question.text|truncatechars:22 }}</span>
+            <div class="track"><span style="width:{{ row.correct_rate|default:0 }}%"></span></div>
+            <span class="text-sm right">{% if row.correct_rate is not None %}{{ row.correct_rate }}%{% else %}—{% endif %}</span></div>
+        {% endfor %}
+        <p class="text-xs muted mt-2 mb-0">Questions with low correct rates may be unclear or need more coverage in the lessons.</p>
+      {% endif %}
+    </div>
+  </div>
+{% empty %}
+  {% url 'studio:quiz_create' course.pk as new_url %}
+  {% include "partials/empty.html" with icon_name="chart" title="No quiz data yet" text="Add quizzes to measure how well students understand the material." action_url=new_url action_label="Create a quiz" %}
+{% endfor %}
+{% endblock %}

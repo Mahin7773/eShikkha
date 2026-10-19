@@ -1,0 +1,73 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}{% if creating %}New course{% else %}Edit {{ course.title }}{% endif %} – Studio{% endblock %}
+{% block studio %}
+<div class="page-header">
+  <h1>{% if creating %}Create a new course{% else %}Course details &amp; pricing{% endif %}</h1>
+  <p>{% if creating %}You can change everything later. The course stays a private draft until you submit it.{% else %}Changes are saved immediately{% if course.is_published %}; they appear in the marketplace straight away{% if platform_settings.reapprove_published_edits %} unless policy sends the course back for review{% endif %}{% endif %}.{% endif %}</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" novalidate data-once>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-error mb-4">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+
+  <fieldset class="fieldset">
+    <legend>Basics</legend>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.title span=True %}
+      {% include "partials/field.html" with field=form.subtitle span=True %}
+      {% include "partials/field.html" with field=form.category %}
+      {% include "partials/field.html" with field=form.level %}
+      {% include "partials/field.html" with field=form.language %}
+      <div></div>
+      {% include "partials/field.html" with field=form.tags %}
+    </div>
+  </fieldset>
+
+  <fieldset class="fieldset">
+    <legend>Course landing page</legend>
+    <p class="legend-help">Shown to prospective students on the course page.</p>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.description %}
+      {% include "partials/field.html" with field=form.learning_objectives %}
+      {% include "partials/field.html" with field=form.prerequisites %}
+      {% include "partials/field.html" with field=form.target_audience %}
+    </div>
+  </fieldset>
+
+  <fieldset class="fieldset">
+    <legend>Media</legend>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.thumbnail %}
+      {% include "partials/field.html" with field=form.promo_video %}
+      {% include "partials/field.html" with field=form.promo_video_url span=True %}
+    </div>
+  </fieldset>
+
+  <fieldset class="fieldset">
+    <legend>Pricing</legend>
+    <p class="legend-help">Maximum price ${{ platform_settings.max_course_price }}. Platform fee on sales: {{ platform_settings.platform_fee_percent|floatformat:0 }}%.</p>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.price %}
+      <div></div>
+      {% include "partials/field.html" with field=form.discount_price %}
+      {% include "partials/field.html" with field=form.discount_ends_at %}
+    </div>
+  </fieldset>
+
+  <fieldset class="fieldset">
+    <legend>Completion rules</legend>
+    <p class="legend-help">Progress = required lessons completed (+ required quizzes passed, if enabled), each weighted equally.</p>
+    <div class="stack">
+      {% include "partials/field.html" with field=form.sequential_progression %}
+      {% include "partials/field.html" with field=form.require_quizzes_for_completion %}
+      {% include "partials/field.html" with field=form.certificate_enabled %}
+    </div>
+  </fieldset>
+
+  <div class="form-actions">
+    <button class="btn btn-primary btn-lg" type="submit">{% if creating %}Create course{% else %}Save changes{% endif %}</button>
+    <a class="btn btn-ghost" href="{% if creating %}{% url 'studio:dashboard' %}{% else %}{% url 'studio:course' course.pk %}{% endif %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% load ui %}
+{% if items %}
+  <div class="course-grid">
+    {% for e in items %}
+      <article class="card enroll-card">
+        {% include "partials/thumb.html" with course=e.course %}
+        <div class="body">
+          <h3><a href="{{ e.get_resume_url }}" style="color:var(--ink)">{{ e.course.title }}</a></h3>
+          <div class="text-xs muted">{{ e.course.instructor.display_name }}</div>
+          <div class="progress progress-sm mt-2"><span style="width:{{ e.progress_percent }}%"></span></div>
+          <div class="progress-label"><span>{{ e.progress_percent }}% complete</span>{% if e.is_completed %}<span>{% icon "check" 12 %} {{ e.completed_at|date:"M j, Y" }}</span>{% endif %}</div>
+          <div class="actions row">
+            <a class="btn btn-primary btn-sm" href="{{ e.get_resume_url }}">{% if e.is_completed %}Review course{% elif e.progress_percent %}Resume{% else %}Start{% endif %}</a>
+            {% if e.is_completed and e.certificate %}<a class="btn btn-outline btn-sm" href="{% url 'learning:certificate_pdf' e.certificate.certificate_number %}">{% icon "download" 14 %} Certificate</a>{% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  {% url 'courses:list' as browse %}
+  {% if tab == 'completed' %}
+    {% include "partials/empty.html" with icon_name="award" title="No completed courses yet" text="Finish all required lessons and quizzes in a course to complete it and earn your certificate." %}
+  {% else %}
+    {% include "partials/empty.html" with icon_name="book" title="No courses in progress" text="Enrol in a course to start learning. Your progress is saved automatically." action_url=browse action_label="Browse courses" %}
+  {% endif %}
+{% endif %}

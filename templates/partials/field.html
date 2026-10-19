@@ -1,0 +1,22 @@
+{% if field.is_hidden %}{{ field }}{% elif field.widget_type == 'checkbox' %}
+<div class="field field-check{% if field.errors %} has-error{% endif %}{% if span %} span-2{% endif %}">
+  {{ field }}
+  <div>
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% if field.help_text %}<span class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</span>{% endif %}
+    {% if field.errors %}<ul class="errors">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+</div>
+{% else %}
+<div class="field{% if field.errors %} has-error{% endif %}{% if span or field.widget_type == 'textarea' or field.widget_type == 'checkboxselectmultiple' or field.widget_type == 'radioselect' %} span-2{% endif %}">
+  {% if field.widget_type == 'checkboxselectmultiple' or field.widget_type == 'radioselect' %}
+    <span class="field-label" id="{{ field.auto_id }}_label">{{ field.label }}{% if field.field.required %}<span class="required-mark" aria-hidden="true">*</span>{% endif %}</span>
+    <div class="choice-list" role="group" aria-labelledby="{{ field.auto_id }}_label">{% for choice in field %}{{ choice }}{% endfor %}</div>
+  {% else %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required-mark" aria-hidden="true">*</span>{% endif %}</label>
+    {{ field }}
+  {% endif %}
+  {% if field.help_text %}<span class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</span>{% endif %}
+  {% if field.errors %}<ul class="errors" role="alert">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+</div>
+{% endif %}

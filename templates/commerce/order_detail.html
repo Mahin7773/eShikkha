@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Order {{ order.order_number }} – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container container-narrow">
+  <div class="page-header row-between">
+    <div>
+      <h1>{% if order.status == 'paid' %}Payment successful{% elif order.is_payable and not latest_txn %}Review your order{% elif order.status == 'failed' %}Payment failed{% elif order.status == 'cancelled' %}Order cancelled{% elif order.status == 'refunded' %}Order refunded{% else %}Order {{ order.order_number }}{% endif %}</h1>
+      <p class="mono">{{ order.order_number }} · {{ order.created_at|date:"M j, Y H:i" }}</p>
+    </div>
+    {% badge order.get_status_display order.status_tone %}
+  </div>
+
+  {% if order.status == 'paid' %}
+    <div class="alert alert-success mb-5">{% icon "check-circle" 18 %}<div>Your payment was approved and you now have access to the course{{ order.items.all|length|pluralize }} below.</div></div>
+  {% elif order.status == 'failed' %}
+    <div class="alert alert-error mb-5">{% icon "alert" 18 %}<div><strong>{{ latest_txn.message }}</strong> You have not been enrolled. You can try the payment again.</div></div>
+  {% elif order.status == 'cancelled' %}
+    <div class="alert alert-info mb-5">{% icon "info" 18 %}<div>This order was cancelled and you were not charged. Add the course to your cart again to purchase it.</div></div>
+  {% elif order.status == 'refunded' %}
+    <div class="alert alert-warning mb-5">{% icon "info" 18 %}<div>This order was refunded. Course access has been removed.</div></div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header"><h2>Order summary</h2></div>
+    {% for item in order.items.all %}
+      <div class="row" style="padding:var(--s3) var(--s5);border-bottom:1px solid var(--line-soft)">
+        <div style="width:96px">{% include "partials/thumb.html" with course=item.course %}</div>
+        <div class="grow"><div class="strong">{{ item.course.title }}</div>
+          {% if item.discount_amount %}<div class="text-xs muted">List price {{ item.list_price|usd }} · discount −{{ item.discount_amount|usd }}</div>{% endif %}</div>
+        <div class="price">{{ item.price_paid|usd }}</div>
+        {% if order.status == 'paid' %}<a class="btn btn-primary btn-sm" href="{% url 'learning:resume' item.course.slug %}">Start learning</a>{% endif %}
+      </div>
+    {% endfor %}
+    <div class="card-body">
+      <div class="summary-lines">
+        <div><span>Subtotal</span><span>{{ order.subtotal|usd }}</span></div>
+        {% if order.discount_total %}<div><span>Discounts</span><span style="color:var(--success)">−{{ order.discount_total|usd }}</span></div>{% endif %}
+        <div class="total"><span>Total</span><span>{{ order.total|usd }}</span></div>
+      </div>
+    </div>
+    {% if order.is_payable %}
+    <div class="card-footer row-between">
+      <form method="post" action="{% url 'commerce:cancel_order' order.order_number %}" data-confirm="Cancel this order? You will not be charged." data-confirm-button="Cancel order">{% csrf_token %}
+        <button class="btn btn-ghost" type="submit">Cancel order</button></form>
+      <a class="btn btn-primary btn-lg" href="{% url 'commerce:sandbox' order.order_number %}">{% icon "card" 18 %} {% if order.status == 'failed' %}Try payment again{% else %}Proceed to payment{% endif %}</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if order.transactions.all %}
+  <h2 class="mt-6" style="font-size:var(--fs-lg)">Payment attempts</h2>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Transaction ID</th><th>Date</th><th>Status</th><th>Message</th><th class="num">Amount</th></tr></thead>
+    <tbody>{% for t in order.transactions.all %}
+      <tr><td class="mono">{{ t.transaction_id }}</td><td class="nowrap">{{ t.created_at|date:"M j, H:i" }}</td><td>{% badge t.get_status_display t.status_tone %}</td><td class="text-sm">{{ t.message }}</td><td class="num">{{ t.amount|usd }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+  <p class="mt-5"><a href="{% url 'commerce:orders' %}">{% icon "chevron-left" 14 %} All orders</a></p>
+</div>
+{% endblock %}

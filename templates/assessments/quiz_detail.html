@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ quiz.title }} – {{ course.title }}{% endblock %}
+{% block content %}
+<div class="container container-narrow">
+  <div class="page-header">
+    <nav class="breadcrumbs text-sm"><a href="{% url 'learning:resume' course.slug %}">{% icon "chevron-left" 14 %} Back to {{ course.title }}</a></nav>
+    <h1>{{ quiz.title }}</h1>
+    <p>{% if quiz.lesson %}Quiz for “{{ quiz.lesson.title }}”{% else %}Course assessment{% endif %}{% if quiz.is_required and course.require_quizzes_for_completion %} · required to complete the course{% endif %}</p>
+  </div>
+
+  {% if passed %}<div class="alert alert-success mb-5">{% icon "check-circle" 18 %}<div>You have passed this quiz{% if best %} with a best score of <strong>{{ best.score_percent|floatformat:0 }}%</strong>{% endif %}.</div></div>{% endif %}
+
+  <div class="card">
+    <div class="card-body">
+      {% if quiz.description %}<p class="prose">{{ quiz.description }}</p>{% endif %}
+      <div class="stat-grid">
+        <div class="stat"><div class="label">Questions</div><div class="value">{{ question_count }}</div></div>
+        <div class="stat"><div class="label">Pass mark</div><div class="value">{{ quiz.passing_score }}%</div></div>
+        <div class="stat"><div class="label">Time limit</div><div class="value">{% if quiz.time_limit_minutes %}{{ quiz.time_limit_minutes }}<small class="text-sm muted"> min</small>{% else %}—{% endif %}</div></div>
+        <div class="stat"><div class="label">Attempts</div><div class="value">{% if quiz.unlimited_attempts %}∞{% else %}{{ attempts_used }}/{{ quiz.max_attempts }}{% endif %}</div><div class="hint">{% if attempts_remaining is not None %}{{ attempts_remaining }} remaining{% else %}unlimited{% endif %}</div></div>
+      </div>
+      <ul class="plain text-sm muted mt-5 stack-sm">
+        {% if quiz.time_limit_minutes %}<li>{% icon "clock" 14 %} The timer starts when you begin and keeps running if you leave the page. Unsubmitted attempts are closed when time runs out.</li>{% endif %}
+        <li>{% icon "info" 14 %} {{ quiz.get_result_visibility_display }}.</li>
+        {% if quiz.shuffle_questions %}<li>{% icon "refresh" 14 %} Questions appear in a random order on each attempt.</li>{% endif %}
+      </ul>
+    </div>
+    <div class="card-footer row-between">
+      {% if open_attempt %}
+        <span class="text-sm">You have an attempt in progress.</span>
+        <a class="btn btn-primary" href="{% url 'assessments:take' course.slug open_attempt.pk %}">Resume attempt {% icon "arrow-right" 16 %}</a>
+      {% elif can_start %}
+        <span class="text-sm muted">Ready when you are.</span>
+        <form method="post" action="{% url 'assessments:start' course.slug quiz.pk %}" data-once {% if quiz.time_limit_minutes %}data-confirm="You will have {{ quiz.time_limit_minutes }} minutes once you start. Begin now?" data-confirm-title="Start timed quiz?" data-confirm-button="Start quiz" data-confirm-tone="primary"{% endif %}>{% csrf_token %}
+          <button class="btn btn-primary" type="submit">{% if history %}Retake quiz{% else %}Start quiz{% endif %}</button>
+        </form>
+      {% else %}
+        <span class="text-sm muted">{% icon "lock" 14 %} {{ block_reason }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if history %}
+    <h2 class="mt-6" style="font-size:var(--fs-lg)">Attempt history</h2>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Attempt</th><th>Submitted</th><th>Status</th><th class="num">Score</th><th>Result</th><th></th></tr></thead>
+      <tbody>{% for a in history %}
+        <tr><td>#{{ a.attempt_number }}</td><td class="nowrap">{{ a.submitted_at|date:"M j, Y H:i" }}</td><td>{{ a.get_status_display }}</td>
+          <td class="num">{{ a.score_percent|floatformat:0 }}%</td>
+          <td>{% if a.passed %}{% badge "Passed" "success" %}{% else %}{% badge "Not passed" "danger" %}{% endif %}</td>
+          <td class="right"><a class="btn btn-ghost btn-sm" href="{% url 'assessments:result' course.slug a.pk %}">View</a></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  {% endif %}
+</div>
+{% endblock %}

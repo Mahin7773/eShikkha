@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ lesson.title }} – {{ course.title }}{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<div class="player">
+  <div class="player-main">
+    <div class="player-topbar">
+      <a href="{% if enrollment %}{% url 'learning:dashboard' %}{% else %}{{ course.get_absolute_url }}{% endif %}" aria-label="Back">{% icon "chevron-left" 20 %}</a>
+      <span class="title">{{ course.title }}</span>
+      {% if progress %}
+        <div class="progress" title="{{ progress.percent }}% complete" aria-label="Course progress {{ progress.percent }}%"><span style="width:{{ progress.percent }}%"></span></div>
+        <span class="text-xs nowrap">{{ progress.percent }}%</span>
+      {% elif is_preview_mode %}
+        <span class="badge badge-warning">{% if can_access %}Instructor preview{% else %}Free preview{% endif %}</span>
+      {% endif %}
+    </div>
+
+    {% if lesson.lesson_type == 'video' and video_src %}
+      <div class="video-frame">
+        {% if lesson.video_kind == 'embed' %}
+          <iframe src="{{ lesson.embed_url }}" title="{{ lesson.title }}" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+        {% else %}
+          <video controls preload="metadata" playsinline src="{{ video_src }}">
+            Your browser cannot play this video. <a href="{{ video_src }}">Open the video</a>.
+          </video>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="article-head">
+        <span class="badge badge-neutral mb-2">{% icon "file" 12 %} Reading · {{ lesson.duration_minutes|minutes }}</span>
+        <h1 style="font-size:var(--fs-2xl);margin:0">{{ lesson.title }}</h1>
+      </div>
+    {% endif %}
+
+    <div class="lesson-actions">
+      <div>
+        {% if lesson.lesson_type == 'video' %}<h1 style="font-size:var(--fs-xl);margin:0">{{ lesson.title }}</h1>{% endif %}
+        <span class="text-xs muted">{{ lesson.section.title }}</span>
+      </div>
+      <div class="row">
+        {% if prev_lesson %}<a class="btn btn-outline btn-sm" href="{% url 'learning:lesson' course.slug prev_lesson.pk %}">{% icon "chevron-left" 14 %} Previous</a>{% endif %}
+        {% if enrollment %}
+          {% if is_completed %}
+            <span class="badge badge-success" style="padding:6px 10px">{% icon "check" 14 %} Completed</span>
+          {% elif manual_completion %}
+            <form method="post" action="{% url 'learning:complete_lesson' course.slug lesson.pk %}" data-once>{% csrf_token %}
+              {% if next_lesson %}<input type="hidden" name="next_lesson" value="{{ next_lesson.pk }}">{% endif %}
+              <button class="btn btn-primary btn-sm" type="submit">{% icon "check" 14 %} Mark as complete{% if next_lesson %} &amp; continue{% endif %}</button>
+            </form>
+          {% else %}
+            <span class="badge badge-info" style="padding:6px 10px">Pass the lesson quiz to complete</span>
+          {% endif %}
+        {% endif %}
+        {% if next_lesson %}<a class="btn btn-outline btn-sm" href="{% url 'learning:lesson' course.slug next_lesson.pk %}">Next {% icon "chevron-right" 14 %}</a>{% endif %}
+      </div>
+    </div>
+
+    <div class="player-body">
+      <div class="tabs mb-5" role="tablist" data-tabs aria-label="Lesson details">
+        <button role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true">Overview</button>
+        <button role="tab" id="tab-materials" aria-controls="panel-materials" aria-selected="false" tabindex="-1">Materials{% if resources %} ({{ resources|length }}){% endif %}</button>
+        <button role="tab" id="tab-quizzes" aria-controls="panel-quizzes" aria-selected="false" tabindex="-1">Quizzes{% if quiz_count %} ({{ quiz_count }}){% endif %}</button>
+        {% if progress %}<button role="tab" id="tab-progress" aria-controls="panel-progress" aria-selected="false" tabindex="-1">Progress</button>{% endif %}
+      </div>
+
+      <section id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" class="tab-panel">
+        {% if lesson.content %}<div class="prose">{{ lesson.content }}</div>{% else %}<p class="muted">No written overview for this lesson.</p>{% endif %}
+        <hr>
+        <div class="row text-sm muted">{% icon "user" 14 %} {{ course.instructor.display_name }} · {% icon "clock" 14 %} {{ lesson.duration_minutes|minutes }}</div>
+      </section>
+
+      <section id="panel-materials" role="tabpanel" aria-labelledby="tab-materials" class="tab-panel" hidden>
+        {% if resources %}
+          <ul class="resource-list">
+            {% for r in resources %}
+              <li><a href="{% url 'learning:resource' r.pk %}" {% if r.url and not r.file %}target="_blank" rel="noopener"{% endif %}>
+                {% if r.resource_type == 'link' %}{% icon "link" 18 %}{% else %}{% icon "file" 18 %}{% endif %}
+                <span class="grow"><span class="strong">{{ r.title }}</span><br><span class="text-xs muted">{{ r.get_resource_type_display }}</span></span>
+                {% if r.url and not r.file %}{% icon "external" 16 %}{% else %}{% icon "download" 16 %}{% endif %}
+              </a></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">No downloadable materials for this lesson.</p>
+        {% endif %}
+      </section>
+
+      <section id="panel-quizzes" role="tabpanel" aria-labelledby="tab-quizzes" class="tab-panel" hidden>
+        {% if lesson_quizzes or final_quizzes %}
+          <ul class="resource-list">
+            {% for q in lesson_quizzes %}{% include "learning/_quiz_link.html" with label="Lesson quiz" %}{% endfor %}
+            {% for q in final_quizzes %}{% include "learning/_quiz_link.html" with label="Course assessment" %}{% endfor %}
+          </ul>
+        {% else %}<p class="muted">This course has no quizzes.</p>{% endif %}
+      </section>
+
+      {% if progress %}
+      <section id="panel-progress" role="tabpanel" aria-labelledby="tab-progress" class="tab-panel" hidden>
+        <div class="stat-grid">
+          <div class="stat"><div class="label">Overall</div><div class="value">{{ progress.percent }}%</div></div>
+          <div class="stat"><div class="label">Lessons</div><div class="value">{{ progress.lessons_done }}/{{ progress.lessons_total }}</div><div class="hint">required lessons completed</div></div>
+          {% if progress.quizzes_total %}<div class="stat"><div class="label">Quizzes</div><div class="value">{{ progress.quizzes_passed }}/{{ progress.quizzes_total }}</div><div class="hint">required quizzes passed</div></div>{% endif %}
+        </div>
+        <p class="text-sm muted mt-4">Progress counts each required lesson{% if progress.quizzes_total %} and required quiz{% endif %} equally{% if course.sequential_progression %}; lessons unlock in order{% endif %}.
+          {% if enrollment.is_completed %}<strong>You completed this course on {{ enrollment.completed_at|date:"M j, Y" }}.</strong>{% if course.certificate_enabled %} <a href="{% url 'learning:certificates' %}">View certificate</a>.{% endif %}{% endif %}</p>
+      </section>
+      {% endif %}
+
+      {% if enrollment %}
+        <p class="text-xs mt-6"><a class="muted" href="{% url 'core:report' 'course' course.pk %}?next={{ request.path|urlencode }}">{% icon "flag" 12 %} Report a problem with this course</a></p>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="player-side" aria-label="Course content">
+    <header>
+      <div class="strong">Course content</div>
+      {% if progress %}<div class="text-xs muted">{{ progress.done }} of {{ progress.total }} items complete</div>{% endif %}
+    </header>
+    {% for block in outline %}
+      <details {% if block.has_current or forloop.first and not enrollment %}open{% endif %}>
+        <summary><strong>Section {{ forloop.counter }}: {{ block.section.title }}</strong><small>{{ block.done }}/{{ block.total }} complete</small></summary>
+        <nav aria-label="{{ block.section.title }}">
+          {% for item in block.items %}
+            {% if item.state == 'locked' %}
+              <span class="lesson-item locked" aria-disabled="true"><span class="state">{% icon "lock" 15 %}</span><span>{{ item.lesson.title }}<span class="sub">{{ item.lesson.duration_minutes|minutes }}{% if not can_access %} · Enrol to unlock{% endif %}</span></span></span>
+            {% else %}
+              <a class="lesson-item {{ item.state }}{% if item.done %} completed{% endif %}" href="{% url 'learning:lesson' course.slug item.lesson.pk %}" {% if item.state == 'current' %}aria-current="page"{% endif %}>
+                <span class="state">{% if item.done %}{% icon "check-circle" 16 %}{% elif item.state == 'current' %}{% icon "play" 16 %}{% else %}{% icon "circle" 16 %}{% endif %}</span>
+                <span>{{ item.lesson.title }}<span class="sub">{% if item.lesson.lesson_type == 'video' %}Video{% else %}Reading{% endif %} · {{ item.lesson.duration_minutes|minutes }}{% if item.lesson.is_preview and not enrollment %} · Preview{% endif %}</span></span>
+              </a>
+            {% endif %}
+            {% for q in item.quizzes %}
+              {% if can_access %}<a class="lesson-item quiz{% if q.passed %} completed{% endif %}" href="{% url 'assessments:quiz' course.slug q.quiz.pk %}"><span class="state">{% if q.passed %}{% icon "check-circle" 16 %}{% else %}{% icon "target" 16 %}{% endif %}</span><span>{{ q.quiz.title }}<span class="sub">Quiz{% if q.quiz.is_required %} · required{% endif %}</span></span></a>
+              {% else %}<span class="lesson-item quiz locked"><span class="state">{% icon "lock" 15 %}</span><span>{{ q.quiz.title }}<span class="sub">Quiz</span></span></span>{% endif %}
+            {% endfor %}
+          {% endfor %}
+        </nav>
+      </details>
+    {% endfor %}
+    {% if final_quizzes %}
+      <details open>
+        <summary><strong>Final assessment</strong><small>{{ final_quizzes|length }} quiz{{ final_quizzes|length|pluralize:"zes" }}</small></summary>
+        {% for q in final_quizzes %}
+          {% if can_access %}<a class="lesson-item{% if q.passed %} completed{% endif %}" href="{% url 'assessments:quiz' course.slug q.quiz.pk %}"><span class="state">{% if q.passed %}{% icon "check-circle" 16 %}{% else %}{% icon "target" 16 %}{% endif %}</span><span>{{ q.quiz.title }}<span class="sub">{% if q.passed %}Passed{% else %}Quiz{% if q.quiz.is_required %} · required{% endif %}{% endif %}</span></span></a>
+          {% else %}<span class="lesson-item locked"><span class="state">{% icon "lock" 15 %}</span><span>{{ q.quiz.title }}</span></span>{% endif %}
+        {% endfor %}
+      </details>
+    {% endif %}
+    {% if not can_access and course.is_published %}
+      <div style="padding:var(--s4)"><a class="btn btn-primary btn-block" href="{{ course.get_absolute_url }}">Enrol to unlock all lessons</a></div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

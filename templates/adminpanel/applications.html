@@ -1,0 +1,40 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}Instructor applications – Admin{% endblock %}
+{% block manage %}
+<div class="page-header"><h1>Instructor applications</h1><p>{% if require_approval %}New instructors need approval before they can create courses.{% else %}Instructor approval is currently disabled in settings; applications are approved automatically.{% endif %}</p></div>
+<div class="row mb-5">{% for v, l in statuses %}<a class="chip {% if status == v %}active{% endif %}" href="?status={{ v }}">{{ l }}</a>{% endfor %}<a class="chip {% if status == 'all' %}active{% endif %}" href="?status=all">All</a></div>
+<div class="stack">
+{% for a in page_obj %}
+  <div class="card">
+    <div class="card-header">
+      <div class="row"><span class="avatar">{{ a.user.initials }}</span><div><a class="strong" href="{% url 'adminpanel:user_detail' a.user.pk %}">{{ a.user.display_name }}</a><div class="text-xs muted">{{ a.user.email }} · applied {{ a.created_at|date:"M j, Y" }}</div></div></div>
+      {% if a.status == 'approved' %}{% badge a.get_status_display 'success' %}{% elif a.status == 'rejected' %}{% badge a.get_status_display 'danger' %}{% else %}{% badge a.get_status_display 'info' %}{% endif %}
+    </div>
+    <div class="card-body">
+      <dl class="stack-sm text-sm" style="margin:0">
+        <div><dt class="strong">Headline</dt><dd style="margin:0">{{ a.headline }}</dd></div>
+        <div><dt class="strong">Wants to teach</dt><dd style="margin:0">{{ a.expertise }}</dd></div>
+        <div><dt class="strong">Experience</dt><dd style="margin:0" class="prose">{{ a.experience }}</dd></div>
+        {% if a.sample_url %}<div><dt class="strong">Sample work</dt><dd style="margin:0"><a href="{{ a.sample_url }}" target="_blank" rel="noopener noreferrer">{{ a.sample_url }} {% icon "external" 12 %}</a></dd></div>{% endif %}
+      </dl>
+      {% if a.status == 'pending' %}
+        <form method="post" action="{% url 'adminpanel:application_decide' a.pk %}" class="mt-5">
+          {% csrf_token %}
+          <div class="field"><label for="note-{{ a.pk }}">Note to applicant (required when rejecting)</label><textarea id="note-{{ a.pk }}" name="note" rows="2"></textarea></div>
+          <div class="row mt-4">
+            <button class="btn btn-primary" type="submit" name="decision" value="approve">{% icon "check" 14 %} Approve</button>
+            <button class="btn btn-danger-outline" type="submit" name="decision" value="reject">{% icon "x" 14 %} Reject</button>
+          </div>
+        </form>
+      {% else %}
+        <p class="text-sm muted mt-4 mb-0">Decided by {{ a.reviewed_by.display_name|default:"system" }} on {{ a.reviewed_at|date:"M j, Y" }}{% if a.review_note %}: “{{ a.review_note }}”{% endif %}</p>
+      {% endif %}
+    </div>
+  </div>
+{% empty %}
+  {% include "partials/empty.html" with icon_name="monitor" title="No applications here" text="New instructor applications will appear in this queue." %}
+{% endfor %}
+</div>
+{% include "partials/pagination.html" with querystring="status="|add:status %}
+{% endblock %}

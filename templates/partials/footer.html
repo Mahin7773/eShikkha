@@ -1,0 +1,35 @@
+{% now "Y" as year %}
+<footer class="footer">
+  <div class="container footer-grid">
+    <div>
+      <a class="brand" href="{% url 'core:home' %}">{% include "partials/logo_mark.html" %}{{ platform.site_name }}</a>
+      <p class="mt-4" style="max-width:36ch">{{ platform.tagline }}.</p>
+    </div>
+    <div>
+      <h4>Learn</h4>
+      <ul>
+        <li><a href="{% url 'courses:list' %}">Browse courses</a></li>
+        <li><a href="{% url 'courses:list' %}?sort=newest">New courses</a></li>
+        <li><a href="{% url 'courses:list' %}?price=free">Free courses</a></li>
+        <li><a href="{% url 'learning:verify' %}">Verify a certificate</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Teach</h4>
+      <ul>
+        <li><a href="{% url 'accounts:apply_instructor' %}">Become an instructor</a></li>
+        <li><a href="{% url 'studio:dashboard' %}">Instructor studio</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Categories</h4>
+      <ul>
+        {% for cat in nav_categories|slice:":5" %}<li><a href="{% url 'courses:list' %}?category={{ cat.slug }}">{{ cat.name }}</a></li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© {{ year }} {{ platform.site_name }}. All rights reserved.</span>
+    <span>Support: <a href="mailto:{{ platform.support_email }}">{{ platform.support_email }}</a></span>
+  </div>
+</footer>

@@ -1,0 +1,29 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}Announcements – Admin{% endblock %}
+{% block manage %}
+<div class="page-header"><h1>Platform announcements</h1><p>Active announcements appear as a banner for the chosen audience. Users can dismiss them.</p></div>
+<div class="grid grid-aside">
+  <div class="stack">
+    {% for a in announcements %}
+      <div class="card"><div class="card-body">
+        <div class="row-between"><div class="strong">{{ a.title }}</div><div class="row">{% badge a.get_audience_display "neutral" %}{% if a.is_active %}{% badge "Active" "success" %}{% else %}{% badge "Inactive" "neutral" %}{% endif %}</div></div>
+        <p class="text-sm prose mt-2">{{ a.body }}</p>
+        <div class="row-between"><span class="text-xs muted">{{ a.created_by.display_name|default:"—" }} · {{ a.created_at|date:"M j, Y" }}</span>
+          <div class="row"><a class="btn btn-ghost btn-sm" href="{% url 'adminpanel:announcement_edit' a.pk %}">{% icon "edit" 14 %} Edit</a>
+            <form method="post" action="{% url 'adminpanel:announcement_delete' a.pk %}" data-confirm="Delete this announcement?" data-confirm-button="Delete">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit" aria-label="Delete announcement">{% icon "trash" 14 %}</button></form></div></div>
+      </div></div>
+    {% empty %}
+      {% include "partials/empty.html" with icon_name="bell" title="No announcements" text="Create one to inform students or instructors about platform news." %}
+    {% endfor %}
+  </div>
+  <div class="card"><div class="card-body">
+    <h2 style="font-size:var(--fs-lg)">{% if editing %}Edit announcement{% else %}New announcement{% endif %}</h2>
+    <form method="post" action="{% if editing %}{% url 'adminpanel:announcement_edit' editing.pk %}{% else %}{% url 'adminpanel:announcements' %}{% endif %}" novalidate data-once>
+      {% csrf_token %}
+      {% include "partials/form.html" with single=True %}
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save</button>{% if editing %}<a class="btn btn-ghost" href="{% url 'adminpanel:announcements' %}">Cancel</a>{% endif %}</div>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

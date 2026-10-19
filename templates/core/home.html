@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load ui humanize %}
+{% block content %}
+<section class="hero2">
+  <div class="container hero2-grid">
+    <div>
+      <span class="eyebrow">{% icon "book" 14 %} শিক্ষা · learning for everyone</span>
+      <h1>Learn something <em>meaningful</em>, one lesson at a time.</h1>
+      <p class="lead">Practical courses from people who do the work. Watch, practise with quizzes, and earn a certificate you can verify anywhere.</p>
+      <form class="searchbar" action="{% url 'courses:list' %}" method="get" role="search">
+        {% icon "search" 18 %}
+        <label class="sr-only" for="hero-q">What do you want to learn?</label>
+        <input id="hero-q" type="search" name="q" placeholder="Try “Django”, “SQL” or “design”">
+        <button class="btn btn-primary" type="submit">Search</button>
+      </form>
+      {% if categories %}
+        <div class="popular-terms"><span>Popular:</span>{% for cat in categories|slice:":4" %}<a href="{% url 'courses:list' %}?category={{ cat.slug }}">{{ cat.name }}</a>{% endfor %}</div>
+      {% endif %}
+      <div class="stats-band">
+        <div><strong>{{ stats.courses|intcomma }}</strong><span>courses</span></div>
+        <div><strong>{{ stats.students|intcomma }}</strong><span>learners</span></div>
+        <div><strong>{{ stats.instructors|intcomma }}</strong><span>instructors</span></div>
+      </div>
+    </div>
+
+    {% with spot=bestsellers.1|default:bestsellers.0 %}
+    {% if spot %}
+    <div class="hero-panel" aria-hidden="true">
+      <div class="panel-card">
+        {% include "partials/thumb.html" with course=spot %}
+        <div class="mt-4 strong">{{ spot.title }}</div>
+        <div class="text-sm muted">with {{ spot.instructor.display_name }}</div>
+        <div class="progress mt-4"><span style="width: 64%"></span></div>
+        <div class="progress-label"><span>Lesson 6 of 9</span><span>64%</span></div>
+      </div>
+      <div class="panel-float b"><span class="dot warm">{% icon "target" 16 %}</span><div><div class="strong">Quiz passed</div><div class="text-xs muted">Score 92%</div></div></div>
+      <div class="panel-float a"><span class="dot">{% icon "award" 16 %}</span><div><div class="strong">Certificate earned</div><div class="text-xs muted">Verifiable online</div></div></div>
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+</section>
+
+{% if categories %}
+<section class="section-tight" style="padding-top:0">
+  <div class="container">
+    <nav class="topic-rail" aria-label="Topics">
+      {% for cat in categories %}
+        <a class="topic" href="{% url 'courses:list' %}?category={{ cat.slug }}"><span class="mega-icon" style="--h: {{ cat.pk|hue }}">{{ cat.name|initials }}</span>{{ cat.name }} <small>{{ cat.course_count }}</small></a>
+      {% endfor %}
+    </nav>
+  </div>
+</section>
+{% endif %}
+
+{% if featured %}
+<section class="section-tight">
+  <div class="container">
+    <div class="section-head"><div><span class="eyebrow">Editor's picks</span><h2>Featured this month</h2></div><a href="{% url 'courses:list' %}">Browse everything {% icon "arrow-right" 14 %}</a></div>
+    <div class="spotlight">
+      {% with course=featured.0 %}
+        <a class="spot-main" href="{{ course.get_absolute_url }}">
+          {% include "partials/thumb.html" %}
+          <div class="body">
+            <span class="eyebrow">{{ course.category.name }}</span>
+            <h3>{{ course.title }}</h3>
+            <p>{{ course.subtitle|default:course.description|truncatechars:120 }}</p>
+            <p>with {{ course.instructor.display_name }} · {{ course.get_level_display }}</p>
+            <div class="row mt-2" style="margin-top:auto">
+              {% rating_pill course.rating_avg course.rating_count %}
+              <span class="ccard-price">{{ course.effective_price|money }}{% if course.has_active_discount %}<s>{{ course.price|money }}</s>{% endif %}</span>
+            </div>
+            <span class="btn btn-light" style="align-self:flex-start">View course {% icon "arrow-right" 14 %}</span>
+          </div>
+        </a>
+      {% endwith %}
+      <div class="spot-list">
+        {% for course in featured|slice:"1:" %}
+          <a class="mini" href="{{ course.get_absolute_url }}">
+            {% include "partials/thumb.html" %}
+            <div><h4>{{ course.title }}</h4><div class="text-xs muted mb-2">{{ course.instructor.display_name }}</div><div class="row">{% rating_pill course.rating_avg course.rating_count %}<span class="ccard-price text-sm">{{ course.effective_price|money }}</span></div></div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section-tight">
+  <div class="container">
+    <div class="section-head"><div><h2>Popular with learners</h2><p>The courses students are enrolling in most.</p></div><a href="{% url 'courses:list' %}?sort=popular">See all {% icon "arrow-right" 14 %}</a></div>
+    {% if bestsellers %}
+      <div class="course-grid">{% for course in bestsellers %}{% include "partials/course_card.html" with bestseller=forloop.first %}{% endfor %}</div>
+    {% else %}
+      {% include "partials/empty.html" with icon_name="book" title="No courses yet" text="Published courses will appear here once instructors launch them." %}
+    {% endif %}
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="container">
+    <div class="section-head"><div><span class="eyebrow">How it works</span><h2>From first lesson to certificate</h2></div></div>
+    <div class="steps">
+      <div class="step"><h3>Pick a course</h3><p>Preview free lessons, read reviews and enrol, or start a free course straight away.</p></div>
+      <div class="step"><h3>Learn and practise</h3><p>Video and reading lessons with notes to download and quizzes that check your understanding.</p></div>
+      <div class="step"><h3>Get certified</h3><p>Finish the required lessons and quizzes to earn a certificate with a public verification link.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="container grid grid-2" style="gap: var(--s7)">
+    <div>
+      <div class="section-head"><h2>Just added</h2><a href="{% url 'courses:list' %}?sort=newest">More {% icon "arrow-right" 14 %}</a></div>
+      <div class="stack-sm">{% for course in newest %}<a class="mini" href="{{ course.get_absolute_url }}">{% include "partials/thumb.html" %}<div><h4>{{ course.title }}</h4><div class="text-xs muted mb-2">{{ course.instructor.display_name }}</div><div class="row">{% rating_pill course.rating_avg course.rating_count %}<span class="ccard-price text-sm">{{ course.effective_price|money }}</span></div></div></a>{% empty %}<p class="muted">Nothing new yet.</p>{% endfor %}</div>
+    </div>
+    <div>
+      <div class="section-head"><h2>Highest rated</h2><a href="{% url 'courses:list' %}?sort=rating">More {% icon "arrow-right" 14 %}</a></div>
+      <div class="stack-sm">{% for course in top_rated %}<a class="mini" href="{{ course.get_absolute_url }}">{% include "partials/thumb.html" %}<div><h4>{{ course.title }}</h4><div class="text-xs muted mb-2">{{ course.instructor.display_name }}</div><div class="row">{% rating_pill course.rating_avg course.rating_count %}<span class="ccard-price text-sm">{{ course.effective_price|money }}</span></div></div></a>{% empty %}<p class="muted">Ratings appear once students review courses.</p>{% endfor %}</div>
+    </div>
+  </div>
+</section>
+
+{% if instructors %}
+<section class="section-tight">
+  <div class="container">
+    <div class="section-head"><div><h2>Meet the instructors</h2><p>Practitioners who teach what they use every day.</p></div></div>
+    <div class="people">
+      {% for ins in instructors %}
+        <a class="person" href="{% url 'courses:instructor' ins.username %}">
+          <span class="avatar avatar-lg">{% if ins.avatar %}<img src="{{ ins.avatar.url }}" alt="">{% else %}{{ ins.initials }}{% endif %}</span>
+          <span class="grow"><span class="strong">{{ ins.display_name }}</span><span class="text-xs muted">{{ ins.headline|default:"Instructor"|truncatechars:48 }}</span>
+            <span class="row mt-2" style="gap:6px">{% if ins.rating %}{% rating_pill ins.rating ins.students %}{% endif %}<span class="text-xs muted">{{ ins.course_count }} course{{ ins.course_count|pluralize }}</span></span></span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section-tight">
+  <div class="container">
+    <div class="cta2">
+      <div><span class="eyebrow">Teach</span><h2>Share what you know</h2><p>Build a course with video, materials and quizzes, then follow your students' progress with built-in analytics.</p></div>
+      <a class="btn btn-accent btn-lg" href="{% url 'accounts:apply_instructor' %}">Start teaching</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

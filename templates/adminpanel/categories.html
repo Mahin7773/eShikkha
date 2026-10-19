@@ -1,0 +1,44 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}Categories &amp; tags – Admin{% endblock %}
+{% block manage %}
+<div class="page-header"><h1>Categories &amp; tags</h1><p>Organise the marketplace. Categories with courses can be deactivated but not deleted.</p></div>
+<div class="grid grid-aside">
+  <div class="stack">
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Category</th><th class="num">Order</th><th class="num">Courses</th><th>Status</th><th></th></tr></thead>
+      <tbody>{% for c in categories %}
+        <tr {% if editing.pk == c.pk %}style="background:var(--primary-soft)"{% endif %}>
+          <td><div class="strong">{{ c.name }}</div><div class="text-xs muted">{{ c.description|truncatechars:70 }}</div></td>
+          <td class="num">{{ c.order }}</td><td class="num">{{ c.course_n }}</td>
+          <td>{% if c.is_active %}{% badge "Active" "success" %}{% else %}{% badge "Inactive" "neutral" %}{% endif %}</td>
+          <td><div class="table-actions"><a class="btn btn-ghost btn-sm" href="{% url 'adminpanel:category_edit' c.pk %}">{% icon "edit" 14 %} Edit</a>
+            {% if not c.course_n %}<form method="post" action="{% url 'adminpanel:category_delete' c.pk %}" data-confirm="Delete the “{{ c.name }}” category?" data-confirm-button="Delete">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit" aria-label="Delete {{ c.name }}">{% icon "trash" 14 %}</button></form>{% endif %}</div></td>
+        </tr>
+      {% empty %}<tr><td colspan="5" class="muted">No categories yet.</td></tr>{% endfor %}</tbody>
+    </table></div>
+
+    <div class="card"><div class="card-header"><h2>Tags</h2></div><div class="card-body">
+      <div class="row mb-4">
+        {% for t in tags %}
+          <form method="post" action="{% url 'adminpanel:tag_delete' t.pk %}" class="chip" data-confirm="Delete the tag “{{ t.name }}”? It will be removed from {{ t.course_n }} course{{ t.course_n|pluralize }}." data-confirm-button="Delete tag">{% csrf_token %}
+            {{ t.name }} <span class="muted text-xs">{{ t.course_n }}</span>
+            <button type="submit" style="background:none;border:0;cursor:pointer;padding:0;color:var(--muted)" aria-label="Delete tag {{ t.name }}">{% icon "x" 12 %}</button></form>
+        {% empty %}<p class="muted text-sm">No tags yet.</p>{% endfor %}
+      </div>
+      <form method="post" action="{% url 'adminpanel:tag_create' %}" class="row">{% csrf_token %}
+        <label class="sr-only" for="tag-name">New tag</label><input id="tag-name" class="input" name="name" maxlength="40" required placeholder="New tag name" style="max-width:240px">
+        <button class="btn btn-outline" type="submit">{% icon "plus" 14 %} Add tag</button></form>
+    </div></div>
+  </div>
+
+  <div class="card"><div class="card-body">
+    <h2 style="font-size:var(--fs-lg)">{% if editing %}Edit “{{ editing.name }}”{% else %}New category{% endif %}</h2>
+    <form method="post" action="{% if editing %}{% url 'adminpanel:category_edit' editing.pk %}{% else %}{% url 'adminpanel:categories' %}{% endif %}" novalidate data-once>
+      {% csrf_token %}
+      {% include "partials/form.html" with single=True %}
+      <div class="form-actions"><button class="btn btn-primary" type="submit">{% if editing %}Save changes{% else %}Add category{% endif %}</button>{% if editing %}<a class="btn btn-ghost" href="{% url 'adminpanel:categories' %}">Cancel</a>{% endif %}</div>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

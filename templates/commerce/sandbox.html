@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Payment – {{ platform.site_name }}{% endblock %}
+{% block content %}
+<div class="container section">
+  <div class="gateway">
+    <div class="alert sandbox-banner mb-4" role="note">{% icon "alert" 18 %}<div><strong>Simulated payment</strong> — no card details are collected and no money is charged.</div></div>
+    <div class="card">
+      <div class="card-header"><h2 style="color:#fff">{% icon "shield" 18 %} eShikkha Sandbox Pay</h2></div>
+      <div class="card-body">
+        <div class="summary-lines mb-5">
+          <div><span class="muted">Merchant</span><span>{{ platform.site_name }}</span></div>
+          <div><span class="muted">Order</span><span class="mono">{{ order.order_number }}</span></div>
+          <div><span class="muted">Items</span><span>{{ order.items.count }} course{{ order.items.count|pluralize }}</span></div>
+          <div class="total"><span>Amount due</span><span>{{ order.total|usd }}</span></div>
+        </div>
+        <form method="post" data-once>
+          {% csrf_token %}
+          <fieldset style="border:0;padding:0;margin:0">
+            <legend class="strong text-sm mb-2">Payment outcome</legend>
+            {% for value, label in outcomes %}
+              <label class="outcome">
+                <input type="radio" name="outcome" value="{{ value }}" {% if forloop.first %}checked{% endif %} required>
+                <span><span class="strong text-sm">{{ label }}</span><br>
+                  <span class="text-xs muted">{% if value == 'success' %}Payment is approved; you are enrolled immediately.{% elif value == 'decline' %}The test card is declined; no access is granted and you may retry.{% else %}You abandon payment at the gateway; the order is cancelled.{% endif %}</span></span>
+              </label>
+            {% endfor %}
+          </fieldset>
+          <button class="btn btn-primary btn-block btn-lg mt-5" type="submit" data-loading="Processing…">Pay {{ order.total|usd }}</button>
+        </form>
+        <p class="text-xs muted center mt-4 mb-0">The amount is taken from your order on the server and cannot be changed here.</p>
+      </div>
+    </div>
+    <p class="center mt-4"><a href="{% url 'commerce:order_detail' order.order_number %}">{% icon "chevron-left" 14 %} Back to order</a></p>
+  </div>
+</div>
+{% endblock %}

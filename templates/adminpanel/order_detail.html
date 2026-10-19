@@ -1,0 +1,41 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}Order {{ order.order_number }} – Admin{% endblock %}
+{% block manage %}
+<div class="page-header row-between">
+  <div><nav class="breadcrumbs text-sm"><a href="{% url 'adminpanel:transactions' %}">{% icon "chevron-left" 14 %} Transactions</a></nav>
+    <h1 class="mono" style="font-size:var(--fs-xl)">{{ order.order_number }}</h1>
+    <p>{{ order.student.display_name }} ({{ order.student.email }}) · created {{ order.created_at|date:"M j, Y H:i" }}{% if order.paid_at %} · paid {{ order.paid_at|date:"M j, Y H:i" }}{% endif %}</p></div>
+  {% badge order.get_status_display order.status_tone %}
+</div>
+<div class="grid grid-aside">
+  <div class="stack">
+    <div class="card"><div class="card-header"><h2>Items &amp; earnings split</h2></div>
+      <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+        <thead><tr><th>Course</th><th>Instructor</th><th class="num">List</th><th class="num">Paid</th><th class="num">Platform fee</th><th class="num">Instructor share</th></tr></thead>
+        <tbody>{% for i in items %}<tr><td>{{ i.course.title }}</td><td>{{ i.instructor.display_name }}</td><td class="num">{{ i.list_price|usd }}</td><td class="num">{{ i.price_paid|usd }}</td>
+          <td class="num">{% if i.earning %}{{ i.earning.platform_fee|usd }}{% else %}—{% endif %}</td><td class="num">{% if i.earning %}{{ i.earning.net_amount|usd }}{% if i.earning.status == 'reversed' %} {% badge "reversed" "warning" %}{% endif %}{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+      </table></div>
+      <div class="card-body"><div class="summary-lines"><div><span>Subtotal</span><span>{{ order.subtotal|usd }}</span></div><div><span>Discounts</span><span>−{{ order.discount_total|usd }}</span></div><div class="total"><span>Total</span><span>{{ order.total|usd }}</span></div></div></div>
+    </div>
+    <div class="card"><div class="card-header"><h2>Transactions</h2></div>
+      <div class="table-wrap" style="border:0;border-radius:0"><table class="table">
+        <tbody>{% for t in transactions %}<tr><td class="mono">{{ t.transaction_id }}</td><td>{% badge t.get_status_display t.status_tone %}</td><td class="text-sm">{{ t.message }}</td><td class="text-sm nowrap">{{ t.processed_at|date:"M j, H:i" }}</td></tr>{% empty %}<tr><td class="muted">No payment attempts.</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+  </div>
+  <div>
+    {% if order.status == 'paid' %}
+    <div class="card"><div class="card-body">
+      <h2 style="font-size:var(--fs-lg)">Refund</h2>
+      <p class="text-sm muted">Marks the transaction refunded, revokes the student's access and certificates for these courses, and reverses instructor earnings.</p>
+      <form method="post" action="{% url 'adminpanel:order_refund' order.order_number %}" data-confirm="The student will lose access to the course{{ items|length|pluralize }} in this order." data-confirm-title="Refund this order?" data-confirm-button="Issue refund">
+        {% csrf_token %}
+        {% include "partials/form.html" with form=form single=True %}
+        <button class="btn btn-danger mt-4" type="submit">Issue refund</button>
+      </form>
+    </div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

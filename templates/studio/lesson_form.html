@@ -1,0 +1,78 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}{% if lesson %}Edit lesson{% else %}New lesson{% endif %} – {{ course.title }}{% endblock %}
+{% block studio %}
+<div class="page-header">
+  <nav class="breadcrumbs text-sm"><a href="{% url 'studio:curriculum' course.pk %}">{% icon "chevron-left" 14 %} Curriculum</a><span class="muted">/ {{ section.title }}</span></nav>
+  <h1>{% if lesson %}{{ lesson.title }}{% else %}Add a lesson{% endif %}</h1>
+</div>
+
+<div class="grid grid-aside">
+  <div class="card"><div class="card-body">
+    <form method="post" enctype="multipart/form-data" novalidate data-once>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-error mb-4">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>{% endif %}
+      <div class="form-grid">
+        {% include "partials/field.html" with field=form.title span=True %}
+        {% include "partials/field.html" with field=form.lesson_type %}
+        {% include "partials/field.html" with field=form.duration_minutes %}
+        {% include "partials/field.html" with field=form.video_file %}
+        {% include "partials/field.html" with field=form.video_url %}
+        {% include "partials/field.html" with field=form.content %}
+      </div>
+      <h3 class="mt-5" style="font-size:var(--fs-md)">Completion &amp; access</h3>
+      <div class="stack">
+        {% include "partials/field.html" with field=form.is_required %}
+        {% include "partials/field.html" with field=form.is_preview %}
+        {% include "partials/field.html" with field=form.completion_rule %}
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">{% if lesson %}Save lesson{% else %}Create lesson{% endif %}</button>
+        <a class="btn btn-ghost" href="{% url 'studio:curriculum' course.pk %}">Back to curriculum</a>
+        {% if lesson %}<a class="btn btn-ghost" href="{% url 'learning:lesson' course.slug lesson.pk %}">{% icon "eye" 16 %} Preview</a>{% endif %}
+      </div>
+    </form>
+  </div></div>
+
+  <div class="stack">
+    {% if lesson %}
+    <div class="card">
+      <div class="card-header"><h2>Lecture materials</h2></div>
+      <div class="card-body">
+        {% if resources %}
+          <ul class="resource-list mb-4">
+            {% for r in resources %}
+              <li><div>
+                {% if r.resource_type == 'link' %}{% icon "link" 16 %}{% else %}{% icon "file" 16 %}{% endif %}
+                <span class="grow"><span class="strong text-sm">{{ r.title }}</span><br><span class="text-xs muted">{{ r.get_resource_type_display }}</span></span>
+                <form method="post" action="{% url 'studio:resource_delete' course.pk r.pk %}" data-confirm="Remove “{{ r.title }}” from this lesson?" data-confirm-button="Remove">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit" aria-label="Remove {{ r.title }}">{% icon "trash" 14 %}</button></form>
+              </div></li>
+            {% endfor %}
+          </ul>
+        {% else %}<p class="text-sm muted">Add PDFs, slides, documents or links for students to download.</p>{% endif %}
+        <form method="post" action="{% url 'studio:resource_create' course.pk lesson.pk %}" enctype="multipart/form-data" novalidate data-once>
+          {% csrf_token %}
+          {% include "partials/form.html" with form=resource_form single=True %}
+          <button class="btn btn-outline mt-4" type="submit">{% icon "plus" 14 %} Add material</button>
+        </form>
+      </div>
+    </div>
+    <div class="card"><div class="card-body">
+      <h2 style="font-size:var(--fs-lg)">Lesson quiz</h2>
+      {% for q in lesson.quizzes.all %}
+        <p class="text-sm"><a href="{% url 'studio:quiz_questions' course.pk q.pk %}">{{ q.title }}</a> · {{ q.questions.count }} question{{ q.questions.count|pluralize }}</p>
+      {% empty %}
+        <p class="text-sm muted">Check understanding with a short quiz after this lesson.</p>
+      {% endfor %}
+      <a class="btn btn-outline btn-sm" href="{% url 'studio:quiz_create' course.pk %}?lesson={{ lesson.pk }}">{% icon "plus" 14 %} Add quiz to this lesson</a>
+    </div></div>
+    {% else %}
+      <div class="alert alert-info">{% icon "info" 18 %}<div>Save the lesson first, then attach lecture materials and quizzes.</div></div>
+    {% endif %}
+    <div class="card"><div class="card-body text-sm muted">
+      <strong style="color:var(--ink)">Video tips</strong>
+      <ul class="bullet-list mt-2"><li>Upload MP4/WebM (max {{ 500 }} MB), or paste a YouTube, Vimeo or direct .mp4 link.</li><li>Uploaded videos are only streamed to enrolled students.</li><li>Mark one or two lessons as free previews to attract students.</li></ul>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

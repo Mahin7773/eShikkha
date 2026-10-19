@@ -1,0 +1,17 @@
+{% load ui %}
+<a class="ccard" href="{{ course.get_absolute_url }}">
+  <div class="ccard-media">
+    {% include "partials/thumb.html" %}
+    <span class="ccard-cat">{{ course.category.name }}</span>
+    {% if course.has_active_discount %}<span class="ccard-deal">−{{ course.discount_percent }}%</span>{% elif bestseller %}<span class="ccard-deal">Popular</span>{% endif %}
+  </div>
+  <div class="ccard-body">
+    <span class="ccard-meta">{{ course.get_level_display }} · {{ course.language }}</span>
+    <h3>{{ course.title }}</h3>
+    <p class="ccard-by">with {{ course.instructor.display_name }}</p>
+    <div class="ccard-foot">
+      {% rating_pill course.rating_avg course.rating_count %}
+      <span class="ccard-price">{{ course.effective_price|default:course.current_price|money }}{% if course.has_active_discount %}<s>{{ course.price|money }}</s>{% endif %}</span>
+    </div>
+  </div>
+</a>

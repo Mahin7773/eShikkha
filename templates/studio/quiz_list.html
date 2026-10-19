@@ -1,0 +1,32 @@
+{% extends "layouts/studio.html" %}
+{% load ui %}
+{% block title %}Quizzes – {{ course.title }}{% endblock %}
+{% block studio %}
+<div class="page-header row-between">
+  <div><h1>Quizzes</h1><p>Lesson quizzes check understanding along the way; course-level quizzes work as final assessments.</p></div>
+  {% if editable %}<a class="btn btn-primary" href="{% url 'studio:quiz_create' course.pk %}">{% icon "plus" 16 %} New quiz</a>{% endif %}
+</div>
+{% if quizzes %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Quiz</th><th>Placement</th><th class="num">Questions</th><th>Rules</th><th class="num">Attempts</th><th>Status</th><th></th></tr></thead>
+    <tbody>{% for q in quizzes %}
+      <tr>
+        <td><a class="strong" href="{% url 'studio:quiz_questions' course.pk q.pk %}">{{ q.title }}</a></td>
+        <td class="text-sm">{% if q.lesson %}After “{{ q.lesson.title|truncatechars:30 }}”{% else %}Course-level{% endif %}</td>
+        <td class="num">{{ q.question_count }}</td>
+        <td class="text-xs muted">Pass {{ q.passing_score }}% · {% if q.unlimited_attempts %}unlimited{% else %}{{ q.max_attempts }} attempt{{ q.max_attempts|pluralize }}{% endif %}{% if q.time_limit_minutes %} · {{ q.time_limit_minutes }} min{% endif %}</td>
+        <td class="num">{{ q.attempt_count }}</td>
+        <td>{% if q.is_published %}{% badge "Published" "success" %}{% else %}{% badge "Hidden" "neutral" %}{% endif %}{% if q.is_required %} {% badge "Required" "info" %}{% endif %}</td>
+        <td><div class="table-actions">
+          <a class="btn btn-outline btn-sm" href="{% url 'studio:quiz_questions' course.pk q.pk %}">Questions</a>
+          {% if editable %}<a class="btn btn-ghost btn-sm" href="{% url 'studio:quiz_edit' course.pk q.pk %}">Settings</a>
+          <form method="post" action="{% url 'studio:quiz_delete' course.pk q.pk %}" data-confirm="{% if q.attempt_count %}Students have attempted this quiz, so it will be hidden instead of deleted.{% else %}Delete this quiz and all its questions?{% endif %}" data-confirm-title="Delete quiz?" data-confirm-button="{% if q.attempt_count %}Hide quiz{% else %}Delete quiz{% endif %}">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit" aria-label="Delete {{ q.title }}">{% icon "trash" 14 %}</button></form>{% endif %}
+        </div></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>
+{% else %}
+  {% url 'studio:quiz_create' course.pk as new_url %}
+  {% include "partials/empty.html" with icon_name="target" title="No quizzes yet" text="Create multiple-choice and true/false quizzes with pass marks, time limits and attempt limits." action_url=new_url action_label="Create a quiz" %}
+{% endif %}
+{% endblock %}

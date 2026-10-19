@@ -1,0 +1,40 @@
+{% extends "layouts/manage.html" %}
+{% load ui %}
+{% block title %}Ratings &amp; reviews – Admin{% endblock %}
+{% block manage %}
+<div class="page-header"><h1>Ratings &amp; reviews</h1><p>Hide reviews that break the content policy. Hidden reviews don't count towards ratings.</p></div>
+<div class="row-between mb-5">
+  <div class="row">
+    <a class="chip {% if view == 'all' %}active{% endif %}" href="?view=all">All</a>
+    <a class="chip {% if view == 'reported' %}active{% endif %}" href="?view=reported">Reported</a>
+    <a class="chip {% if view == 'low' %}active{% endif %}" href="?view=low">1–2 stars</a>
+    <a class="chip {% if view == 'hidden' %}active{% endif %}" href="?view=hidden">Hidden</a>
+  </div>
+  <form method="get" class="row"><input type="hidden" name="view" value="{{ view }}"><label class="sr-only" for="q">Search</label><input id="q" class="input" type="search" name="q" value="{{ q }}" placeholder="Search reviews" style="width:240px"><button class="btn btn-outline" type="submit">Search</button></form>
+</div>
+<div class="stack">
+{% for r in page_obj %}
+  <div class="card"><div class="card-body">
+    <div class="row-between">
+      <div class="row">{% stars r.rating show_number=False %}<span class="strong text-sm">{{ r.student.display_name }}</span><span class="text-xs muted">on <a href="{{ r.course.get_absolute_url }}#reviews">{{ r.course.title }}</a> · {{ r.created_at|date:"M j, Y" }}</span></div>
+      <div class="row">{% if r.report_n %}{% badge r.report_n|stringformat:"s"|add:" open report(s)" "danger" %}{% endif %}{% if r.is_hidden %}{% badge "Hidden" "neutral" %}{% endif %}</div>
+    </div>
+    <p class="text-sm prose mt-2">{{ r.comment|default:"(no comment)" }}</p>
+    {% if r.is_hidden %}<p class="text-xs muted">Hidden: {{ r.hidden_reason }}</p>{% endif %}
+    <form method="post" action="{% url 'adminpanel:review_toggle' r.pk %}" class="row">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+      {% if r.is_hidden %}
+        <button class="btn btn-outline btn-sm" type="submit">{% icon "eye" 14 %} Restore review</button>
+      {% else %}
+        <label class="sr-only" for="reason-{{ r.pk }}">Reason for hiding</label>
+        <input id="reason-{{ r.pk }}" class="input" name="reason" placeholder="Reason for hiding (sent to the student)" style="max-width:360px;min-height:32px">
+        <button class="btn btn-danger-outline btn-sm" type="submit">{% icon "x" 14 %} Hide review</button>
+      {% endif %}
+    </form>
+  </div></div>
+{% empty %}
+  {% include "partials/empty.html" with icon_name="star" title="No reviews here" %}
+{% endfor %}
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}
