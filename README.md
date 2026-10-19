@@ -6,8 +6,6 @@ A course marketplace and learning platform built with Django for System Developm
 
 ![eShikkha workflow](docs/workflow.png)
 
-Source: [`docs/workflow.mmd`](docs/workflow.mmd) (Mermaid).
-
 ## Screenshots
 
 ![eShikkha home page](docs/screenshots/01-home.png)
