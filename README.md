@@ -1,8 +1,6 @@
 # eShikkha – Learning Management System
 
-A course marketplace and learning platform built with Django for an academic software engineering project, inspired by Udemy. Instructors publish and sell courses, students buy and complete them, and administrators moderate the platform.
-
-> **All payments are simulated.** No payment provider is integrated, no card details are collected and no money moves. Instructor earnings are reporting figures only.
+A course marketplace and learning platform built with Django for System Development Project, inspired by Udemy. Instructors publish and sell courses, students buy and complete them, and administrators moderate the platform.
 
 ## Screenshots
 
@@ -44,7 +42,7 @@ A course marketplace and learning platform built with Django for an academic sof
 
 ## Quick start
 
-Requirements: Python 3.12 or later. It was developed with Python 3.14 and Django 6.0.8.
+Requirements: Python 3.12 or later
 
 ```bash
 # 1. Create and activate a virtual environment (or use an existing conda env)
@@ -67,11 +65,11 @@ python manage.py runserver
 
 Open http://127.0.0.1:8000.
 
-| Demo account | Username | Password | Lands on |
-|---|---|---|---|
-| Student | `student` | `Demo@12345` | `/learn/`: learning dashboard |
-| Instructor | `instructor` | `Demo@12345` | `/teach/`: instructor studio |
-| Administrator | `admin` | `Demo@12345` | `/manage/`: admin panel |
+| Demo account  | Username     | Password     | Lands on                      |
+| ------------- | ------------ | ------------ | ----------------------------- |
+| Student       | `student`    | `Demo@12345` | `/learn/`: learning dashboard |
+| Instructor    | `instructor` | `Demo@12345` | `/teach/`: instructor studio  |
+| Administrator | `admin`      | `Demo@12345` | `/manage/`: admin panel       |
 
 You can log in with either the username or the email address (for example `student@eshikkha.local`). The admin account is also a Django superuser, so it can open the secondary `/django-admin/` back office.
 
@@ -84,32 +82,6 @@ For a database without demo data, run `python manage.py createsuperuser`. Superu
 ```bash
 python manage.py test
 ```
-
-The 42 tests cover:
-- payment idempotency and price tampering
-- declined and cancelled payments
-- refunds
-- lesson access control
-- quiz attempt limits, deadlines and answer leakage
-- the progress formula
-- certificate uniqueness and verification
-- the moderation workflow
-- instructor ownership checks
-- suspensions
-- instructor applications
-
-## Optional technologies and setup notes
-
-| Need | Default | How to change |
-|---|---|---|
-| Database | SQLite (`db.sqlite3`) | Install `psycopg[binary]` and set `DATABASES` in `eShikkha/settings.py` to PostgreSQL. The models use no SQLite-specific features. Row locks (`select_for_update`) and partial unique constraints are fully enforced on PostgreSQL. |
-| Media storage | Local `media/` folder | Uploaded videos and resources are served through access-checked views. For production, use object storage (for example `django-storages`) and an X-Accel/X-Sendfile setup. |
-| Email | Console backend (printed in the terminal) | Set `EMAIL_BACKEND` and SMTP settings. |
-| QR codes on certificates | `qrcode` package | If it isn't installed, certificates print the verification URL without a QR code. |
-| Fonts | Inter from Google Fonts | Falls back to system fonts offline. |
-| Sample lesson videos | Public CC0 clips from MDN, streamed over the internet | Upload your own video files in the studio, or paste YouTube/Vimeo links. |
-
-Production settings are read from environment variables: `DJANGO_SECRET_KEY` and `DJANGO_DEBUG=0`. Also set `ALLOWED_HOSTS` and run `collectstatic`.
 
 ## Architecture
 
@@ -130,14 +102,13 @@ static/          design-system CSS and a small progressive-enhancement JS file
 docs/            database design and ER diagram
 ```
 
-The business logic lives in each app's `services.py` (writes) and `selectors.py` (complex reads). Views stay thin: they parse input, call a service and render. This makes the rules easy to test without HTTP. For example, `commerce.services.process_payment` and `learning.services.recalculate_progress` are tested directly.
-
 ## Feature walkthrough
 
 ### Student
+
 - Browse the marketplace: search by title, description, instructor, tag or category; filter by category, level, price and rating; sort by popularity, rating, newest or price; results are paginated.
 - See course pages with objectives, requirements, curriculum, free preview lessons, the instructor profile, a rating breakdown and reviews.
-- Add courses to a cart or use **Buy now**, then go through checkout and the **sandbox gateway**, where you choose *approve*, *decline* or *cancel*.
+- Add courses to a cart or use **Buy now**, then go through checkout and the **sandbox gateway**, where you choose _approve_, _decline_ or _cancel_.
 - Use the learning dashboard: resume where you left off, see in-progress and completed courses, quiz activity and statistics.
 - Use the course player:
   - uploaded or embedded video
@@ -149,6 +120,7 @@ The business logic lives in each app's `services.py` (writes) and `selectors.py`
 - Leave reviews (after the configured minimum progress), report content, view purchase history, and edit your profile and password.
 
 ### Instructor (`/teach/`)
+
 - Create courses with details, media, pricing (discounts with optional end dates) and completion rules: sequential unlocking, required quizzes and certificates.
 - Build the curriculum: sections and lessons, reordering, video upload or URL, article lessons, free previews, required or optional lessons, a "complete when quiz passed" rule, and lecture materials (PDF, slides, documents, files or links).
 - Build quizzes: single- and multiple-answer multiple choice, true/false, points, explanations, pass mark, time limit, attempt limit, shuffling and result visibility.
@@ -156,6 +128,7 @@ The business logic lives in each app's `services.py` (writes) and `selectors.py`
 - See students (progress and best quiz scores), per-question correct rates, reviews and a simulated earnings breakdown.
 
 ### Administrator (`/manage/`)
+
 - Use the dashboard: platform statistics and queues for courses awaiting review, instructor applications and open reports.
 - Moderate courses: a full review view (description, curriculum, resources, quiz answer keys, pricing, instructor) with approve, request changes, reject, unpublish and archive. A reason is required for everything except approval.
 - Manage users: search and filter, suspend or reactivate with a reason, change roles, and grant authorised enrolments.
