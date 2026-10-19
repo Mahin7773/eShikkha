@@ -6,6 +6,10 @@ A course marketplace and learning platform built with Django for System Developm
 
 ![eShikkha workflow](docs/workflow.png)
 
+## Database
+
+See [docs/DATABASE.md](docs/DATABASE.md) for the ER diagram and an explanation of the relationships.
+
 ## Screenshots
 
 ![eShikkha home page](docs/screenshots/01-home.png)
@@ -122,5 +126,3 @@ static/          design-system CSS and JS file
 - **Quiz answers never reach the browser before they're allowed.** The quiz page contains no correctness data, and submitted option IDs are validated against each question.
 - **Role-based access control** is applied to every view, and instructors can only load their own courses (other courses return 404).
 - **Standard Django protections** are on: CSRF on every form, password validators, and safe redirects for `next` URLs. Suspended accounts are signed out on their next request.
-
-See [docs/DATABASE.md](docs/DATABASE.md) for the ER diagram and an explanation of the relationships.
