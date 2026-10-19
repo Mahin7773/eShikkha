@@ -1,0 +1,32 @@
+flowchart TD
+    subgraph INS["1 · Instructor"]
+        direction LR
+        A[Create course] --> B[Add sections, lessons,<br/>materials and quizzes] --> C[Submit for review]
+    end
+
+    subgraph ADM["2 · Administrator"]
+        direction LR
+        D{Review course} -- Approved --> E[Published in catalogue]
+        D -- "Changes requested<br/>or rejected" --> X[Returned to instructor<br/>with feedback]
+    end
+
+    subgraph ENR["3 · Student: enrol"]
+        direction LR
+        F[Browse and search] --> G{Free course?}
+        G -- Yes --> J[Enrolled]
+        G -- No --> H[Cart and checkout] --> I{Simulated payment}
+        I -- Approved --> J
+        I -- Declined --> H
+        I -- Cancelled --> F
+    end
+
+    subgraph LRN["4 · Student: learn"]
+        direction LR
+        K[Watch lessons and<br/>mark complete] --> L[Take quizzes] --> M{All required lessons<br/>and quizzes done?}
+        M -- No --> K
+        M -- Yes --> N[Certificate issued] --> O[Public verification]
+    end
+
+    INS --> ADM
+    ADM --> ENR
+    ENR --> LRN

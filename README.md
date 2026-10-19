@@ -4,38 +4,9 @@ A course marketplace and learning platform built with Django for System Developm
 
 ## Workflow
 
-```mermaid
-flowchart TD
-    subgraph INS[Instructor]
-        A[Create course] --> B[Add sections, lessons,<br/>materials and quizzes]
-        B --> C[Submit for review]
-    end
+![eShikkha workflow](docs/workflow.png)
 
-    subgraph ADM[Administrator]
-        D{Review course}
-    end
-
-    subgraph STU[Student]
-        F[Browse and search courses] --> G{Free course?}
-        G -- Yes --> J[Enrolled]
-        G -- No --> H[Cart and checkout]
-        H --> I{Simulated payment}
-        I -- Approved --> J
-        I -- Declined --> H
-        I -- Cancelled --> F
-        J --> K[Watch lessons and<br/>mark them complete]
-        K --> L[Take quizzes]
-        L --> M{All required lessons<br/>and quizzes done?}
-        M -- No --> K
-        M -- Yes --> N[Certificate issued]
-        N --> O[Public verification page]
-    end
-
-    C --> D
-    D -- Changes requested / rejected --> B
-    D -- Approved --> E[Published in catalogue]
-    E --> F
-```
+Source: [`docs/workflow.mmd`](docs/workflow.mmd) (Mermaid).
 
 ## Screenshots
 
