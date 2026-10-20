@@ -85,37 +85,33 @@ static/          design-system CSS and JS file
 
 ### Student
 
-- Browse the marketplace: search by title, description, instructor, tag or category; filter by category, level, price and rating; sort by popularity, rating, newest or price; results are paginated.
-- See course pages with objectives, requirements, curriculum, free preview lessons, the instructor profile, a rating breakdown and reviews.
-- Add courses to a cart or use **Buy now**, then go through checkout and the **sandbox gateway**, where you choose _approve_, _decline_ or _cancel_.
-- Use the learning dashboard: resume where you left off, see in-progress and completed courses, quiz activity and statistics.
-- Use the course player:
-  - uploaded or embedded video
-  - a sidebar with completed, current and locked states
-  - Overview, Materials, Quizzes and Progress tabs
-  - previous/next navigation and **Mark as complete**
-- Take quizzes with an optional server-enforced time limit and attempt limits, then see results and explanations according to the instructor's settings.
-- Earn certificates: a downloadable PDF with a QR code and a public verification page at `/verify/<id>/`.
-- Leave reviews (after the configured minimum progress), report content, view purchase history, and edit your profile and password.
+- Search, filter and sort the course catalogue
+- Course pages with curriculum, free previews and reviews
+- Cart, checkout and a **sandbox payment** (approve, decline or cancel)
+- Learning dashboard to resume courses and track progress
+- Course player with video, materials and **Mark as complete**
+- Timed quizzes with attempt limits and explanations
+- PDF certificates with a QR code and public verification
+- Reviews, reports, purchase history and profile settings
 
 ### Instructor (`/teach/`)
 
-- Create courses with details, media, pricing (discounts with optional end dates) and completion rules: sequential unlocking, required quizzes and certificates.
-- Build the curriculum: sections and lessons, reordering, video upload or URL, article lessons, free previews, required or optional lessons, a "complete when quiz passed" rule, and lecture materials (PDF, slides, documents, files or links).
-- Build quizzes: single- and multiple-answer multiple choice, true/false, points, explanations, pass mark, time limit, attempt limit, shuffling and result visibility.
-- Use the moderation workflow: a readiness checklist, submission for review, admin feedback with a history timeline, and archive/restore. Editing is locked while a course is under review.
-- See students (progress and best quiz scores), per-question correct rates, reviews and a simulated earnings breakdown.
+- Create courses with pricing, discounts and completion rules
+- Build the curriculum: sections, lessons, videos and materials
+- Build quizzes: multiple choice and true/false, pass mark, time limit
+- Submit for review and get admin feedback
+- Track student progress, quiz stats, reviews and earnings
 
 ### Administrator (`/manage/`)
 
-- Use the dashboard: platform statistics and queues for courses awaiting review, instructor applications and open reports.
-- Moderate courses: a full review view (description, curriculum, resources, quiz answer keys, pricing, instructor) with approve, request changes, reject, unpublish and archive. A reason is required for everything except approval.
-- Manage users: search and filter, suspend or reactivate with a reason, change roles, and grant authorised enrolments.
-- Moderate reviews (hide or restore with a reason) and work through the reports queue.
-- See simulated transactions and orders, with a refund that revokes access and reverses earnings.
-- Manage categories, tags and announcements, and edit platform settings, including policies and the certificate template.
-- Use the analytics page and the append-only audit log.
-- Administrators **cannot impersonate** users. No sign-in-as feature exists; accounts are inspected through read-only views.
+- Dashboard with platform stats and review queues
+- Approve, reject or request changes on courses
+- Manage users, roles and enrolments
+- Moderate reviews and handle reports
+- View transactions and issue refunds
+- Manage categories, tags, announcements and settings
+- Analytics and an audit log
+- No impersonation: accounts are inspected read-only
 
 ## Security and integrity rules
 
