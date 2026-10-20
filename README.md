@@ -4,7 +4,7 @@ A course marketplace and learning platform built with Django for System Developm
 
 ## Workflow
 
-<p align="center"><img src="docs/workflow.png" alt="eShikkha workflow" width="732"></p>
+<p align="center"><img src="docs/workflow.png" alt="eShikkha workflow" width="100%"></p>
 
 ## Database
 

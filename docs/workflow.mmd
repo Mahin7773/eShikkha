@@ -1,7 +1,7 @@
 flowchart TD
     subgraph INS["1 · Instructor"]
         direction LR
-        A[Create course] --> B[Add lessons,<br/>materials, quizzes] --> C[Submit for<br/>review]
+        A[Create<br/>course] --> B[Add lessons,<br/>materials, quizzes] --> C[Submit for<br/>review]
     end
 
     subgraph ADM["2 · Administrator"]
@@ -11,9 +11,9 @@ flowchart TD
     end
 
     subgraph ENR["3 · Student: enrol"]
-        direction TB
-        F[Browse and search] --> G{Free?}
-        G -- No --> H[Cart and checkout] --> I{Payment}
+        direction LR
+        F[Browse and<br/>search] --> G{Free?}
+        G -- No --> H[Cart and<br/>checkout] --> I{Pay}
         G -- Yes --> J[Enrolled]
         I -- Approved --> J
         I -- Declined --> H
@@ -21,10 +21,10 @@ flowchart TD
     end
 
     subgraph LRN["4 · Student: learn"]
-        direction TB
-        K[Watch lessons,<br/>mark complete] --> L[Take quizzes] --> M{All done?}
+        direction LR
+        K[Watch<br/>lessons] --> L[Take<br/>quizzes] --> M{All<br/>done?}
         M -- No --> K
-        M -- Yes --> N[Certificate issued] --> O[Public verification]
+        M -- Yes --> N[Certificate<br/>issued] --> O[Public<br/>verification]
     end
 
     INS --> ADM
