@@ -66,19 +66,25 @@ python manage.py test
 
 ## Architecture
 
+Each app keeps its own `models.py`, `views.py`, `urls.py`, `services.py` (business logic) and `tests.py`.
+
 ```
-eShikkha/        project settings and root URLs
-core/            platform settings, audit log, reports, announcements
-accounts/        custom User role, profile, instructor applications
-courses/         catalogue models, marketplace search (selectors.py)
-learning/        enrolments, progress, course player, certificates, verification
-assessments/     quizzes, attempts, server-side grading and attempt rules
-commerce/        cart, orders, simulated payment gateway, instructor earnings
-notifications/   in-app notifications
-studio/          instructor workspace
-adminpanel/      moderation-focused admin console
-templates/       Django templates (base layout, partials, one folder per app)
-static/          design-system CSS and JS file
+eShikkha/
+├── eShikkha/            # settings and root URLs
+├── core/                # shared tools: permissions, audit log, settings, reports
+├── accounts/            # users, roles, profiles
+├── courses/             # courses and catalogue search
+├── learning/            # enrolments, progress, course player, certificates
+├── assessments/         # quizzes and grading
+├── commerce/            # cart, orders, sandbox payments, earnings
+├── notifications/       # in-app notifications
+├── studio/              # instructor workspace  (/teach/)
+├── adminpanel/          # admin console         (/manage/)
+├── templates/           # HTML templates, one folder per app
+├── static/              # CSS, JS and images
+├── docs/                # diagrams and screenshots
+├── manage.py
+└── requirements.txt
 ```
 
 ## Feature walkthrough
