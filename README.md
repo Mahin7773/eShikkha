@@ -1,6 +1,4 @@
-<p align="center"><img src="static/img/logo-mark.svg" alt="eShikkha logo" width="96"></p>
-
-# eShikkha – Learning Management System
+# <img src="static/img/logo-mark.svg" alt="eShikkha logo" width="32" align="top"> eShikkha – Learning Management System
 
 A course marketplace and learning platform built with Django for System Development Project, inspired by Udemy. Instructors publish and sell courses, students buy and complete them, and administrators moderate the platform.
 
