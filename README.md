@@ -115,10 +115,12 @@ static/          design-system CSS and JS file
 
 ## Security and integrity rules
 
-- **Prices are server-side.** Orders read prices from the database, and the browser only sends course IDs and an outcome keyword. A test checks that a posted `price=0.01` is ignored.
-- **Payments are idempotent.** The order row is locked, an already-paid order returns its original transaction, and a database constraint allows only one successful transaction per order.
-- **Access is checked server-side.** Lesson pages, video streams and resource downloads all check for an active enrolment, ownership or the admin role. Uploaded videos and resources are not publicly served from `/media/`.
-- **Progress and certificates are derived on the server** from completion and attempt rows; there is no endpoint that accepts a progress value.
-- **Quiz answers never reach the browser before they're allowed.** The quiz page contains no correctness data, and submitted option IDs are validated against each question.
-- **Role-based access control** is applied to every view, and instructors can only load their own courses (other courses return 404).
-- **Standard Django protections** are on: CSRF on every form, password validators, and safe redirects for `next` URLs. Suspended accounts are signed out on their next request.
+| Rule | What it means |
+| --- | --- |
+| 💰 **Server-side prices** | Prices come from the database, never the browser |
+| 🔁 **Pay once** | Each order can be paid only once |
+| 🔒 **Protected content** | Lessons, videos and files need an enrolment |
+| 📈 **Trusted progress** | Progress and certificates are worked out on the server |
+| 📝 **Hidden answers** | Quiz answers never reach the browser early |
+| 👥 **Role-based access** | Each role sees only its own pages; instructors only their own courses |
+| 🛡️ **Django defaults** | CSRF, password rules and safe redirects; suspended users are signed out |
